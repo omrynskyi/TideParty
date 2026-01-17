@@ -4,40 +4,41 @@ struct LandingView: View {
     @StateObject private var viewModel = LandingViewModel()
     
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack(alignment: .top) {
             Color.white.ignoresSafeArea()
-            VStack(spacing: 20) {
-                // Header
+            
+            // Header (Notch/Ears)
+            HStack {
                 HStack {
-                    HStack {
-                        Text("Santa Cruz")
-                            .font(.system(size: 16, weight: .medium))
-                        Image(systemName: "location.fill")
-                            .font(.system(size: 12))
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.gray.opacity(0.1))
-                    .cornerRadius(20)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.gray.opacity(0.2), lineWidth: 1)
-                    )
-                    
-                    Spacer()
-                    
-                    Circle()
-                        .fill(Color.blue.opacity(0.2))
-                        .frame(width: 40, height: 40)
-                        .overlay(Text("🦦").font(.title2))
+                    Text("Santa Cruz")
+                        .font(.system(size: 14, weight: .medium))
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 10))
                 }
-                .padding(.horizontal)
-                .padding(.top, 10)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(20)
+                
+                Spacer()
+                
+                Circle()
+                    .fill(Color("MainBlue").opacity(0.2))
+                    .frame(width: 36, height: 36)
+                    .overlay(Text("🦦").font(.system(size: 20)))
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 2) // Slight adjustment for status bar
+            .zIndex(1) // Ensure it stays on top
+            
+            VStack(spacing: 20) {
+                // Spacer to push content down below header/notch
+                Spacer().frame(height: 12)
                 
                 // Hero Message & Weather
                 HStack(alignment: .top) {
                     Text(viewModel.heroMessage)
-                        .font(.system(size: 34, weight: .bold))
+                        .font(.system(size: 30, weight: .bold))
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                     
@@ -51,13 +52,17 @@ struct LandingView: View {
                                 .aspectRatio(contentMode: .fit)
                                 .frame(width: 40, height: 40)
                                 .foregroundColor(.yellow)
-                            
-                            Text("\(weather.temp)°")
-                                .font(.system(size: 18, weight: .bold))
-                            
-                            Text("70° in 2 h")
-                                .font(.caption)
-                                .foregroundColor(.gray)
+                            HStack{
+                                Text("\(weather.temp)°")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .kerning(-1.0)
+                                
+                                Text("70° in 2h")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+                                    .kerning(-0.5)
+
+                            }
                         }
                     }
                 }
@@ -73,10 +78,10 @@ struct LandingView: View {
                         .padding(.vertical, 14)
                         .padding(.horizontal, 24)
                         .frame(maxWidth: .infinity)
-                        .background(Color.blue)
+                        .background(Color("MainBlue"))
                         .cornerRadius(30)
                 }
-                .padding(.horizontal, 60)
+                .padding(.horizontal, 90)
                 
                 // Map Card Placeholder
                 RoundedRectangle(cornerRadius: 24)
@@ -102,7 +107,7 @@ struct LandingView: View {
             // Bottom Wave
             ZStack(alignment: .bottom) {
                 WaveShape()
-                    .fill(Color.blue)
+                    .fill(Color("MainBlue"))
                     .frame(height: 160)
                     .shadow(radius: 10)
                 
@@ -118,6 +123,7 @@ struct LandingView: View {
                 .padding(.bottom, 50)
             }
             .ignoresSafeArea(edges: .bottom)
+            .frame(maxHeight: .infinity, alignment: .bottom)
         }
         .task {
             await viewModel.refreshData()
@@ -132,7 +138,7 @@ struct TideGraphView: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             RoundedRectangle(cornerRadius: 24)
-                .fill(Color.blue.opacity(0.1))
+                .fill(Color("MainBlue").opacity(0.1))
             
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
@@ -167,7 +173,7 @@ struct TideGraphView: View {
                     path.addLine(to: CGPoint(x: w, y: h))
                     path.closeSubpath()
                 }
-                .fill(Color.blue)
+                .fill(Color("MainBlue"))
             }
             .clipShape(RoundedRectangle(cornerRadius: 24))
         }

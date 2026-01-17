@@ -2,10 +2,10 @@ import SwiftUI
 
 struct DesignSystem {
     struct Colors {
-        static let primaryBlue = Color.blue
+        static let primaryBlue = Color("MainBlue")
         static let background = Color.white
         static let textPrimary = Color.black
-        static let oceanFill = Color.blue.opacity(0.8)
+        static let oceanFill = Color("MainBlue").opacity(0.8)
     }
 }
 
