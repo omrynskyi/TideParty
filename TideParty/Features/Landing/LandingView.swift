@@ -35,10 +35,15 @@ struct LandingView: View {
                         
                         Spacer()
                         
-                        Circle()
-                            .fill(Color("MainBlue").opacity(0.2))
-                            .frame(width: 36, height: 36)
-                            .overlay(Text("🦦").font(.system(size: 20)))
+                        Button(action: {
+                            // Debug: Sign Out (AuthManager will update state)
+                            try? AuthManager.shared.signOut()
+                        }) {
+                            Circle()
+                                .fill(Color("MainBlue").opacity(0.2))
+                                .frame(width: 36, height: 36)
+                                .overlay(Text("🦦").font(.system(size: 20)))
+                        }
                     }
                     .padding(.horizontal, 16)
                     .padding(.top, 50) // small top padding for breathing room
