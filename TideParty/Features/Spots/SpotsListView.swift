@@ -37,14 +37,15 @@ struct SpotsListView: View {
                             .overlay(Text("🦦").font(.system(size: 20)))
                     }
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    
                     
                     // Title
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: -2) {
                         Text("Showing places in")
                             .font(.system(size: 28, weight: .bold))
                         Text(viewModel.currentCity)
-                            .font(.system(size: 36, weight: .bold))
+                            .font(.system(size: 40, weight: .bold))
+                            
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
@@ -95,7 +96,7 @@ struct SpotsListView: View {
                 }
             }
             .padding(.bottom, 100)
-            .clipped()
+ 
             
             // Bottom Wave Section (animated)
             VStack(spacing: 0) {

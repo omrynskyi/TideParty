@@ -32,6 +32,16 @@ struct SpotCardView: View {
                                 .font(.system(size: 10))
                                 .foregroundColor(.gray)
                         }
+                        
+                        if let distance = spot.distanceInMiles {
+                            Text("•")
+                                .font(.system(size: 13))
+                                .foregroundColor(.gray)
+                            
+                            Text(String(format: "%.1f mi", distance))
+                                .font(.system(size: 13))
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
                 
@@ -47,19 +57,23 @@ struct SpotCardView: View {
                 }
             }
             
-            // Go Tide Pooling Button
-            Button(action: onGoTidePooling) {
-                Text("Go Tide Pooling")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(spot.isLocalsFavorite ? .white : Color("MainBlue"))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 14)
-                    .background(
-                        spot.isLocalsFavorite 
-                            ? Color("MainBlue") 
-                            : Color.gray.opacity(0.1)
-                    )
-                    .cornerRadius(30)
+            // Go Tide Pooling Button - fit to content, centered
+            HStack {
+                Spacer()
+                Button(action: onGoTidePooling) {
+                    Text("Go Tide Pooling")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(spot.isLocalsFavorite ? .white : Color("MainBlue"))
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 40)
+                        .background(
+                            spot.isLocalsFavorite
+                                ? Color("MainBlue")
+                                : Color.gray.opacity(0.1)
+                        )
+                        .cornerRadius(30)
+                }
+                Spacer()
             }
         }
         .padding(16)

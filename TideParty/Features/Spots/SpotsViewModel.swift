@@ -12,12 +12,27 @@ class SpotsViewModel: ObservableObject {
     
     private let db = Firestore.firestore()
     private let locationManager = LocationManager.shared
+    private var cancellables = Set<AnyCancellable>()
     
     init() {
+        setupSubscriptions()
         Task {
             await fetchCurrentCity()
             await fetchSpots()
         }
+    }
+    
+    private func setupSubscriptions() {
+        locationManager.$userLocation
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] location in
+                guard let self = self, let location = location else { return }
+                Task {
+                    await self.fetchCurrentCity()
+                    self.updateSpotDistances(userLocation: location)
+                }
+            }
+            .store(in: &cancellables)
     }
     
     @MainActor
@@ -95,6 +110,24 @@ class SpotsViewModel: ObservableObject {
         }
         
         isLoading = false
+    }
+    
+    private func updateSpotDistances(userLocation: CLLocation) {
+        var updatedSpots = spots
+        for i in 0..<updatedSpots.count {
+            let spotLocation = CLLocation(
+                latitude: updatedSpots[i].location.latitude,
+                longitude: updatedSpots[i].location.longitude
+            )
+            updatedSpots[i].distanceInMiles = userLocation.distance(from: spotLocation) / 1609.34
+        }
+        
+        spots = updatedSpots.sorted {
+            if $0.isLocalsFavorite != $1.isLocalsFavorite {
+                return $0.isLocalsFavorite
+            }
+            return ($0.distanceInMiles ?? 999) < ($1.distanceInMiles ?? 999)
+        }
     }
     
     @MainActor
