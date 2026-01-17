@@ -1,7 +1,9 @@
 import SwiftUI
+import Combine
 
 struct LandingView: View {
     @StateObject private var viewModel = LandingViewModel()
+    @State private var showScanner = false
     
     var body: some View {
         ZStack(alignment: .top) {
@@ -105,25 +107,31 @@ struct LandingView: View {
             .padding(.top)
             
             // Bottom Wave
-            ZStack(alignment: .bottom) {
-                WaveShape()
-                    .fill(Color("MainBlue"))
-                    .frame(height: 160)
-                    .shadow(radius: 10)
-                
-                VStack(spacing: 8) {
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 30))
-                        .foregroundColor(.white)
+            Button(action: { showScanner = true }) {
+                ZStack(alignment: .bottom) {
+                    WaveShape()
+                        .fill(Color("MainBlue"))
+                        .frame(height: 160)
+                        .shadow(radius: 10)
                     
-                    Text("See anything cool?")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
+                    VStack(spacing: 8) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 30))
+                            .foregroundColor(.white)
+                        
+                        Text("See anything cool?")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.bottom, 50)
                 }
-                .padding(.bottom, 50)
             }
+            .buttonStyle(.plain)
             .ignoresSafeArea(edges: .bottom)
             .frame(maxHeight: .infinity, alignment: .bottom)
+            .sheet(isPresented: $showScanner) {
+                ScannerView()
+            }
         }
         .task {
             await viewModel.refreshData()
@@ -184,3 +192,4 @@ struct TideGraphView: View {
 #Preview {
     LandingView()
 }
+
