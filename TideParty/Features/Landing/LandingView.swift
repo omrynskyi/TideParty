@@ -163,21 +163,21 @@ struct LandingView: View {
                         // Background wave layers (lighter)
                         WaveShape(offset: waveOffset + 0.3, amplitude: 8)
                             .fill(Color("MainBlue").opacity(0.3))
-                            .frame(height: 80)
+                            .frame(height: 70)
                         
                         WaveShape(offset: waveOffset + 0.6, amplitude: 6)
                             .fill(Color("MainBlue").opacity(0.5))
-                            .frame(height: 65)
+                            .frame(height: 60)
                         
                         // Main wave (solid)
                         WaveShape(offset: waveOffset, amplitude: 10)
                             .fill(Color("MainBlue"))
-                            .frame(height: 50)
+                            .frame(height: 48)
                     }
                     
                     // Solid blue area with content
                     Color("MainBlue")
-                        .frame(height: 80)
+                        .frame(height: 90)
                         .overlay(
                             VStack(spacing: 6) {
                                 Image(systemName: "camera")

@@ -14,21 +14,35 @@ class SpotsViewModel: ObservableObject {
     private let locationManager = LocationManager.shared
     private var cancellables = Set<AnyCancellable>()
     
+    // Geocoding control
+    private let geocoder = CLGeocoder()
+    private var geocodeTask: Task<Void, Never>?
+    private var lastGeocodedLocation: CLLocation?
+    private var lastGeocodeAt: Date = .distantPast
+    private let minDistanceMeters: CLLocationDistance = 250        // only geocode if moved > 250m
+    private let minInterval: TimeInterval = 1.0                    // at most 1 request per second
+    
     init() {
         setupSubscriptions()
         Task {
-            await fetchCurrentCity()
+            await fetchCurrentCity()   // initial best-effort if we already have a location
             await fetchSpots()
         }
     }
     
     private func setupSubscriptions() {
+        // Debounce user location updates so we don't geocode on every tiny change
         locationManager.$userLocation
-            .receive(on: DispatchQueue.main)
+            .compactMap { $0 }                // ignore nils
+            .removeDuplicates(by: { lhs, rhs in
+                // Consider duplicates if within a very small distance to avoid churn
+                lhs.distance(from: rhs) < 5
+            })
+            .debounce(for: .milliseconds(600), scheduler: DispatchQueue.main)
             .sink { [weak self] location in
-                guard let self = self, let location = location else { return }
+                guard let self = self else { return }
                 Task {
-                    await self.fetchCurrentCity()
+                    await self.fetchCurrentCityIfNeeded(for: location)
                     self.updateSpotDistances(userLocation: location)
                 }
             }
@@ -36,17 +50,55 @@ class SpotsViewModel: ObservableObject {
     }
     
     @MainActor
+    private func fetchCurrentCityIfNeeded(for location: CLLocation) async {
+        // 1) Distance threshold
+        if let last = lastGeocodedLocation, location.distance(from: last) < minDistanceMeters {
+            return
+        }
+        // 2) Rate limit
+        if Date().timeIntervalSince(lastGeocodeAt) < minInterval {
+            return
+        }
+        await fetchCurrentCity(for: location)
+    }
+    
+    @MainActor
     func fetchCurrentCity() async {
         guard let location = locationManager.userLocation else { return }
+        await fetchCurrentCity(for: location)
+    }
+    
+    @MainActor
+    private func fetchCurrentCity(for location: CLLocation) async {
+        // Cancel any in-flight geocode
+        geocodeTask?.cancel()
         
-        do {
-            let geocoder = CLGeocoder()
-            let placemarks = try await geocoder.reverseGeocodeLocation(location)
-            if let city = placemarks.first?.locality {
-                currentCity = city
+        geocodeTask = Task { [weak self] in
+            guard let self = self else { return }
+            self.lastGeocodeAt = Date()
+            
+            do {
+                // If CLGeocoder has a running request, cancel it
+                if self.geocoder.isGeocoding {
+                    self.geocoder.cancelGeocode()
+                }
+                
+                let placemarks = try await self.geocoder.reverseGeocodeLocation(location)
+                if Task.isCancelled { return }
+                
+                if let city = placemarks.first?.locality, !city.isEmpty {
+                    await MainActor.run {
+                        self.currentCity = city
+                        self.lastGeocodedLocation = location
+                    }
+                }
+            } catch {
+                // Handle throttling/network errors with a small backoff
+                // GEOErrorDomain -3 or kCLErrorDomain Code=2 often indicate throttling/network
+                // Respect the system throttle window; back off briefly.
+                // You could parse timeUntilReset from the error if available; here we use 2s.
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
             }
-        } catch {
-            print("Geocoding error: \(error)")
         }
     }
     
@@ -97,7 +149,7 @@ class SpotsViewModel: ObservableObject {
             }
             
             // Sort: favorites first, then by distance
-            spots = fetchedSpots.sorted { 
+            spots = fetchedSpots.sorted {
                 if $0.isLocalsFavorite != $1.isLocalsFavorite {
                     return $0.isLocalsFavorite
                 }
