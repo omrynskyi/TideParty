@@ -13,6 +13,14 @@ class LandingViewModel: ObservableObject {
     @Published var weatherTimeline: [WeatherTimePoint] = [] // 15-min forecast array
     @Published var selectedGraphDate: Date?
     
+    // AI Insights
+    @Published var aiInsightText: String = ""
+    @Published var isLoadingInsight: Bool = false
+    
+    // Cache storage (15-minute expiration)
+    @AppStorage("cachedInsightText") private var cachedInsightText: String = ""
+    @AppStorage("lastInsightFetchTimestamp") private var lastInsightFetchTimestamp: Double = 0
+    
     // Derived for UI Overlay
     var selectedGraphData: (height: Double, weather: WeatherTimePoint?)? {
         guard let date = selectedGraphDate else { return nil }
@@ -34,13 +42,16 @@ class LandingViewModel: ObservableObject {
     
     private let weatherService: WeatherService 
     private let tideService: TideService // Changed to concrete class to access specific method
+    private let genAIService: GenAIService
     
     init(
         weatherService: WeatherService = WeatherService(),
-        tideService: TideService = TideService() // Default to Concrete
+        tideService: TideService = TideService(), // Default to Concrete
+        genAIService: GenAIService = GenAIService()
     ) {
         self.weatherService = weatherService
         self.tideService = tideService
+        self.genAIService = genAIService
     }
     
     func refreshData() async {
@@ -81,6 +92,9 @@ class LandingViewModel: ObservableObject {
             self.tide = t
             
             updateDecision(weather: w, tide: t)
+            
+            // Fetch AI insight with caching
+            await fetchSmartInsight()
         } catch {
             print("Error fetching data: \(error)")
             heroMessage = "Could not load data."
@@ -110,6 +124,61 @@ class LandingViewModel: ObservableObject {
              } else {
                  heroMessage = "Pack a jacket,\nit's chilly!"
              }
+         }
+    }
+    
+    // MARK: - AI Insight with Smart Caching
+    
+    /// Fetches AI insight with 15-minute caching to avoid rate limits
+    func fetchSmartInsight() async {
+        let currentTime = Date().timeIntervalSince1970
+        let cacheAge = currentTime - lastInsightFetchTimestamp
+        let cacheExpirationTime: TimeInterval = 900 // 15 minutes in seconds
+        
+        // DEVELOPMENT: Cache disabled for testing - always fetch fresh
+        // TODO: Re-enable cache for production
+        /*
+        // Check if cache is valid (< 15 minutes old) and not empty
+        if cacheAge < cacheExpirationTime && !cachedInsightText.isEmpty {
+            print("📱 Using cached insight.")
+            aiInsightText = cachedInsightText
+            return
+        }
+        */
+        
+        // Cache miss - fetch new insight
+        isLoadingInsight = true
+        defer { isLoadingInsight = false }
+        
+        do {
+            // Get current weather description from condition icon
+            let weatherDescription = weather?.condition.replacingOccurrences(of: ".", with: " ")
+                .replacingOccurrences(of: "fill", with: "")
+                .capitalized ?? "Clear"
+            
+            // Pass real-time conditions to GenAI
+            let newInsight = try await genAIService.generateInsight(
+                tideHeight: tide?.height ?? 0.0,
+                tideDirection: tide?.trend ?? "Unknown",
+                weatherCondition: weatherDescription,
+                temperature: weather?.temp ?? 65,
+                location: "Santa Cruz"
+            )
+            
+            // Update published property
+            aiInsightText = newInsight
+            
+            // Save to cache
+            cachedInsightText = newInsight
+            lastInsightFetchTimestamp = currentTime
+            
+            print("✅ Fetched and cached new AI insight.")
+        } catch {
+            print("❌ Error fetching AI insight: \(error)")
+            // Fallback to cached text if available, otherwise show error message
+            aiInsightText = cachedInsightText.isEmpty 
+                ? "Unable to load insight. Please try again later."
+                : cachedInsightText
         }
     }
 }

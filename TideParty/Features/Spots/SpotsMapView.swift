@@ -7,45 +7,103 @@ struct SpotsMapView: View {
     @State private var selectedSpot: TideSpot?
     @State private var position: MapCameraPosition = .automatic
     @State private var currentSpotIndex: Int = 0
+    @State private var mapRegion: MKCoordinateRegion?
+    @State private var clusters: [SpotCluster] = []
     
     var body: some View {
         ZStack {
             Map(position: $position, selection: $selectedSpot) {
                 UserAnnotation()
                 
-                ForEach(viewModel.spots) { spot in
-                    if !spot.polygon.isEmpty {
-                        MapPolygon(coordinates: spot.polygon.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
-                            .foregroundStyle(Color.blue.opacity(0.3))
-                            .stroke(Color.blue, lineWidth: 2)
-                            .tag(spot)
-                    }
-                    
-                    Annotation(spot.name, coordinate: CLLocationCoordinate2D(latitude: spot.location.latitude, longitude: spot.location.longitude)) {
-                        VStack(spacing: 4) {
-                            Text(spot.name)
-                                .font(.system(size: 14, weight: .bold))
-                            
-                            if let distance = spot.distanceInMiles {
-                                Text(String(format: "%.1f mi away", distance))
-                                    .font(.system(size: 10, weight: .medium))
-                                    .foregroundColor(.secondary)
+                // Show clusters or individual spots based on zoom level
+                if shouldCluster {
+                    ForEach(clusters) { cluster in
+                        if cluster.spots.count > 1 {
+                            // Cluster annotation - Apple Maps style
+                            Annotation("", coordinate: cluster.coordinate) {
+                                Text("\(cluster.spots.count) spots")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 12)
+                                    .background(Color.white)
+                                    .cornerRadius(12)
+                                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                             }
+                            .tag(cluster.spots.first)
+                        } else if let spot = cluster.spots.first {
+                            // Render individual spot polygon
+                            if !spot.polygon.isEmpty {
+                                MapPolygon(coordinates: spot.polygon.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
+                                    .foregroundStyle(Color.blue.opacity(0.3))
+                                    .stroke(Color.blue, lineWidth: 2)
+                                    .tag(spot)
+                            }
+                            
+                            // Render annotation offset above the polygon
+                            Annotation(spot.name, coordinate: offsetCoordinate(for: spot)) {
+                                VStack(spacing: 4) {
+                                    Text(spot.name)
+                                        .font(.system(size: 14, weight: .bold))
+                                    
+                                    if let distance = spot.distanceInMiles {
+                                        Text(String(format: "%.1f mi away", distance))
+                                            .font(.system(size: 10, weight: .medium))
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
+                                .padding(.vertical, 8)
+                                .padding(.horizontal, 12)
+                                .background(Color.white)
+                                .cornerRadius(12)
+                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                .scaleEffect(selectedSpot?.id == spot.id ? 1.1 : 1.0)
+                                .animation(.spring(), value: selectedSpot)
+                            }
+                            .tag(spot)
                         }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 12)
-                        .background(Color.white)
-                        .cornerRadius(12)
-                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                        .scaleEffect(selectedSpot?.id == spot.id ? 1.1 : 1.0)
-                        .animation(.spring(), value: selectedSpot)
                     }
-                    .tag(spot)
+                } else {
+                    ForEach(viewModel.spots) { spot in
+                        // Render polygon
+                        if !spot.polygon.isEmpty {
+                            MapPolygon(coordinates: spot.polygon.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
+                                .foregroundStyle(Color.blue.opacity(0.3))
+                                .stroke(Color.blue, lineWidth: 2)
+                                .tag(spot)
+                        }
+                        
+                        // Render annotation offset above the polygon
+                        Annotation(spot.name, coordinate: offsetCoordinate(for: spot)) {
+                            VStack(spacing: 4) {
+                                Text(spot.name)
+                                    .font(.system(size: 14, weight: .bold))
+                                
+                                if let distance = spot.distanceInMiles {
+                                    Text(String(format: "%.1f mi away", distance))
+                                        .font(.system(size: 10, weight: .medium))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .background(Color.white)
+                            .cornerRadius(12)
+                            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                            .scaleEffect(selectedSpot?.id == spot.id ? 1.1 : 1.0)
+                            .animation(.spring(), value: selectedSpot)
+                        }
+                        .tag(spot)
+                    }
                 }
             }
             .mapControls {
                 MapUserLocationButton()
                 MapCompass()
+            }
+            .onMapCameraChange { context in
+                mapRegion = context.region
+                updateClusters()
             }
             .frame(maxHeight: .infinity)
             
@@ -58,7 +116,7 @@ struct SpotsMapView: View {
                             spot: spot,
                             tideHeight: 3.0, // Placeholder
                             onGoTidePooling: {
-                                // Action
+                                openInMaps(spot: spot)
                             }
                         )
                         .background(Color.white)
@@ -76,11 +134,13 @@ struct SpotsMapView: View {
             if let index = viewModel.spots.firstIndex(where: { $0.isLocalsFavorite }) {
                 currentSpotIndex = index
             }
+            updateClusters()
         }
         .onChange(of: viewModel.spots) { spots in
              if let index = spots.firstIndex(where: { $0.isLocalsFavorite }) {
                  currentSpotIndex = index
              }
+             updateClusters()
         }
         .onChange(of: currentSpotIndex) { index in
             guard viewModel.spots.indices.contains(index) else { return }
@@ -104,6 +164,65 @@ struct SpotsMapView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Clustering Logic
+    
+    private var shouldCluster: Bool {
+        guard let region = mapRegion else { return false }
+        // Cluster when zoomed out (latitudeDelta > 0.2 degrees ~= 22km)
+        return region.span.latitudeDelta > 0.2
+    }
+    
+    private func updateClusters() {
+        guard shouldCluster else {
+            clusters = viewModel.spots.map { SpotCluster(spots: [$0]) }
+            return
+        }
+        
+        var remaining = viewModel.spots
+        var newClusters: [SpotCluster] = []
+        
+        while !remaining.isEmpty {
+            let spot = remaining.removeFirst()
+            var clusterSpots = [spot]
+            
+            // Find nearby spots within clustering distance
+            remaining.removeAll { otherSpot in
+                let distance = spot.coordinate.distance(to: otherSpot.coordinate)
+                if distance < 5000 { // 5km clustering radius
+                    clusterSpots.append(otherSpot)
+                    return true
+                }
+                return false
+            }
+            
+            newClusters.append(SpotCluster(spots: clusterSpots))
+        }
+        
+        clusters = newClusters
+    }
+    
+    
+    private func offsetCoordinate(for spot: TideSpot) -> CLLocationCoordinate2D {
+        // Offset annotation slightly north of the actual location
+        CLLocationCoordinate2D(
+            latitude: spot.location.latitude + 0.002, // ~220 meters north
+            longitude: spot.location.longitude
+        )
+    }
+    
+    private func openInMaps(spot: TideSpot) {
+        let coordinate = CLLocationCoordinate2D(
+            latitude: spot.location.latitude,
+            longitude: spot.location.longitude
+        )
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = spot.name
+        mapItem.openInMaps(launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
+        ])
     }
     
 

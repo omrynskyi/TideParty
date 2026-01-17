@@ -12,6 +12,7 @@
 		7C3C23642F1B38AC0074F0BF /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C23632F1B38AC0074F0BF /* FirebaseStorage */; };
 		7C3C24EF2F1C2D4E0074F0BF /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C24EE2F1C2D4E0074F0BF /* GoogleSignIn */; };
 		7C3C24F12F1C2D4E0074F0BF /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C24F02F1C2D4E0074F0BF /* GoogleSignInSwift */; };
+		7C3C255D2F1C44C90074F0BF /* GoogleGenerativeAI in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C255C2F1C44C90074F0BF /* GoogleGenerativeAI */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +48,7 @@
 				7C3C24F12F1C2D4E0074F0BF /* GoogleSignInSwift in Frameworks */,
 				7C3C23602F1B38AC0074F0BF /* FirebaseAuth in Frameworks */,
 				7C3C24EF2F1C2D4E0074F0BF /* GoogleSignIn in Frameworks */,
+				7C3C255D2F1C44C90074F0BF /* GoogleGenerativeAI in Frameworks */,
 				7C3C23622F1B38AC0074F0BF /* FirebaseFirestore in Frameworks */,
 				7C3C23642F1B38AC0074F0BF /* FirebaseStorage in Frameworks */,
 			);
@@ -96,6 +98,7 @@
 				7C3C23632F1B38AC0074F0BF /* FirebaseStorage */,
 				7C3C24EE2F1C2D4E0074F0BF /* GoogleSignIn */,
 				7C3C24F02F1C2D4E0074F0BF /* GoogleSignInSwift */,
+				7C3C255C2F1C44C90074F0BF /* GoogleGenerativeAI */,
 			);
 			productName = TideParty;
 			productReference = 7C3C234E2F1B36C70074F0BF /* TideParty.app */;
@@ -128,6 +131,7 @@
 			packageReferences = (
 				7C3C235E2F1B38AC0074F0BF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				7C3C24ED2F1C2D4E0074F0BF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				7C3C255B2F1C44C90074F0BF /* XCRemoteSwiftPackageReference "generative-ai-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 7C3C234F2F1B36C70074F0BF /* Products */;
@@ -295,6 +299,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TideParty/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Tide Party wants to use camera to indetify sea creatures";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Tide Party uses your location to find nearby tide pools and provide local weather information.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Tide Party uses your location to find nearby tide pools and provide local weather information.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -333,6 +338,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = TideParty/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Tide Party wants to use camera to indetify sea creatures";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Tide Party uses your location to find nearby tide pools and provide local weather information.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Tide Party uses your location to find nearby tide pools and provide local weather information.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -399,6 +405,14 @@
 				minimumVersion = 9.1.0;
 			};
 		};
+		7C3C255B2F1C44C90074F0BF /* XCRemoteSwiftPackageReference "generative-ai-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/generative-ai-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.5.6;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -426,6 +440,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7C3C24ED2F1C2D4E0074F0BF /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		7C3C255C2F1C44C90074F0BF /* GoogleGenerativeAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7C3C255B2F1C44C90074F0BF /* XCRemoteSwiftPackageReference "generative-ai-swift" */;
+			productName = GoogleGenerativeAI;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

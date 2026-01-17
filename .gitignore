@@ -2,3 +2,9 @@ Features/Scanner/TidePoolIdentifier.mlpackage
 venv
 .DS_Store
 TideParty.xcodeproj/project.pbxproj
+
+# Firebase service account keys
+*firebase-adminsdk*.json
+serviceAccountKey.json
+
+GenerativeAI-Info.plist

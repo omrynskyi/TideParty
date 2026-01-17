@@ -127,8 +127,18 @@ class SpotsViewModel: ObservableObject {
                     continue
                 }
                 
-                // Polygon can be [GeoPoint] or missing
-                let polygonData = data["polygon"] as? [GeoPoint] ?? []
+                // Area polygon can be [GeoPoint] or missing (stored as "area" in Firestore)
+                var polygonData: [GeoPoint] = []
+                if let areaArray = data["area"] as? [GeoPoint] {
+                    polygonData = areaArray
+                    print("   ✅ area parsed as [GeoPoint]: \(polygonData.count) points")
+                } else if let rawArea = data["area"] {
+                    print("   ⚠️ area exists but couldn't cast to [GeoPoint]")
+                    print("   Raw area value: \(rawArea)")
+                    print("   Raw area type: \(type(of: rawArea))")
+                } else {
+                    print("   ℹ️ no area data for \(name)")
+                }
                 
                 var spot = TideSpot(
                     id: document.documentID,

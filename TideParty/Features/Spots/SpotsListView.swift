@@ -1,5 +1,6 @@
 import SwiftUI
-
+import MapKit
+import FirebaseFirestore
 struct SpotsListView: View {
     @ObservedObject var viewModel: SpotsViewModel
     
@@ -21,7 +22,7 @@ struct SpotsListView: View {
                                 spot: spot,
                                 tideHeight: 3.0, // Placeholder - integrate with TideService
                                 onGoTidePooling: {
-                                    // Navigate to spot detail
+                                    openInMaps(spot: spot)
                                 }
                             )
                         }
@@ -37,6 +38,19 @@ struct SpotsListView: View {
         .refreshable {
             await viewModel.refresh()
         }
+    }
+    
+    private func openInMaps(spot: TideSpot) {
+        let coordinate = CLLocationCoordinate2D(
+            latitude: spot.location.latitude,
+            longitude: spot.location.longitude
+        )
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = spot.name
+        mapItem.openInMaps(launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
+        ])
     }
 }
 

@@ -104,9 +104,17 @@ struct LandingView: View {
                     }
                     .padding(.horizontal, 90)
                     
-                    // Map Card (Live)
-                    HomeMapCard()
-                        .padding(.horizontal)
+                    // AI Insights Card
+                    AIInsightView(
+                        insightText: viewModel.aiInsightText,
+                        isLoading: viewModel.isLoadingInsight,
+                        onRefresh: {
+                            Task {
+                                await viewModel.fetchSmartInsight()
+                            }
+                        }
+                    )
+                    .padding(.horizontal)
                     
                     // Tide Graph Card (Interactive)
                     if !viewModel.tideCurve.isEmpty {
