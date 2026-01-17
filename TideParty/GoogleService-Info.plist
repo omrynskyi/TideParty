@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CLIENT_ID</key>
+	<string>872285069752-jajfsslj9uht8ggjqlchov3aulcpolgu.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.872285069752-jajfsslj9uht8ggjqlchov3aulcpolgu</string>
 	<key>API_KEY</key>
 	<string>AIzaSyC6rumEr3WijSWnbdFbOddoTILnfjYNFGE</string>
 	<key>GCM_SENDER_ID</key>
@@ -9,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>tideparty.Tideparty</string>
+	<string>tideparty.Tidepartydev</string>
 	<key>PROJECT_ID</key>
 	<string>tidetraveler-c0b6a</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +29,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:872285069752:ios:210696bb374c6e8a892f4d</string>
+	<string>1:872285069752:ios:c3d71d5b76531bc8892f4d</string>
 </dict>
 </plist>
