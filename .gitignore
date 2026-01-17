@@ -1,3 +1,4 @@
 Features/Scanner/TidePoolIdentifier.mlpackage
 venv
 .DS_Store
+TideParty.xcodeproj/project.pbxproj
