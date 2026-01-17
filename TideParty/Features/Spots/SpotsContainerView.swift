@@ -11,9 +11,12 @@ struct SpotsContainerView: View {
     @State private var viewMode: ViewMode = .list
     @State private var waveOffset: Double = 0
     
+    var onOpenCamera: () -> Void = {}
+    
     // Allow injection for previews/tests
-    init(viewModel: SpotsViewModel = SpotsViewModel()) {
+    init(viewModel: SpotsViewModel = SpotsViewModel(), onOpenCamera: @escaping () -> Void = {}) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.onOpenCamera = onOpenCamera
     }
     
     var body: some View {
@@ -128,40 +131,44 @@ struct SpotsContainerView: View {
             }
             
             // Bottom Wave Section (Overlay)
-            VStack(spacing: 0) {
-                Spacer()
-                ZStack(alignment: .bottom) {
-                    WaveShape(offset: waveOffset + 0.3, amplitude: 8)
-                        .fill(Color("MainBlue").opacity(0.3))
-                        .frame(height: 70)
+            Button(action: {
+                onOpenCamera()
+            }) {
+                VStack(spacing: 0) {
+                    Spacer()
+                    ZStack(alignment: .bottom) {
+                        WaveShape(offset: waveOffset + 0.3, amplitude: 8)
+                            .fill(Color("MainBlue").opacity(0.3))
+                            .frame(height: 70)
+                        
+                        WaveShape(offset: waveOffset + 0.6, amplitude: 6)
+                            .fill(Color("MainBlue").opacity(0.5))
+                            .frame(height: 60)
+                        
+                        WaveShape(offset: waveOffset, amplitude: 10)
+                            .fill(Color("MainBlue"))
+                            .frame(height: 48)
+                    }
                     
-                    WaveShape(offset: waveOffset + 0.6, amplitude: 6)
-                        .fill(Color("MainBlue").opacity(0.5))
-                        .frame(height: 60)
-                    
-                    WaveShape(offset: waveOffset, amplitude: 10)
-                        .fill(Color("MainBlue"))
-                        .frame(height: 48)
+                    Color("MainBlue")
+                        .frame(height: 90)
+                        .overlay(
+                            VStack(spacing: 6) {
+                                Image(systemName: "camera")
+                                    .font(.system(size: 28, weight: .medium))
+                                    .foregroundColor(.white)
+                                
+                                Text("Get out there!")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            .offset(y: -8)
+                        )
                 }
-                
-                Color("MainBlue")
-                    .frame(height: 90)
-                    .overlay(
-                        VStack(spacing: 6) {
-                            Image(systemName: "camera")
-                                .font(.system(size: 28, weight: .medium))
-                                .foregroundColor(.white)
-                            
-                            Text("Get out there!")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                        .offset(y: -8)
-                    )
             }
+            .buttonStyle(StaticButtonStyle())
             .ignoresSafeArea(edges: .bottom)
             .zIndex(20)
-            .allowsHitTesting(false)
         }
         .onAppear {
             withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {

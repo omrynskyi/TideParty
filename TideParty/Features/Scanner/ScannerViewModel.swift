@@ -154,7 +154,7 @@ class ScannerViewModel: NSObject, ObservableObject {
             
             self.confidence = conf
             
-            if conf > 0.7 {
+            if conf > 0.9 {
                 self.classificationLabel = name
                 self.isHighConfidence = true
                 
@@ -163,7 +163,7 @@ class ScannerViewModel: NSObject, ObservableObject {
                     self.haptic.impactOccurred()
                     self.lastIdentification = name
                 }
-            } else if conf > 0.5 {
+            } else if conf > 0.7 {
                 self.classificationLabel = name
                 self.isHighConfidence = false
             } else {
