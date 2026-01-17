@@ -20,9 +20,6 @@ struct TidePartyApp: App {
                 LandingView(
                     onFindSpots: {
                         navigationPath.append(Route.spots)
-                    },
-                    onOpenCamera: {
-                        navigationPath.append(Route.scanner)
                     }
                 )
                 .navigationDestination(for: Route.self) { route in

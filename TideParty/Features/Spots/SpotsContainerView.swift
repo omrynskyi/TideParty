@@ -44,30 +44,7 @@ struct SpotsContainerView: View {
                 VStack(spacing: 0) {
                     // Header Area
                     VStack(spacing: 16) {
-                        // Top Bar (City pill & User icon)
-                        HStack {
-                            HStack {
-                                Text(viewModel.currentCity)
-                                    .font(.system(size: 14, weight: .medium))
-                                Image(systemName: "location.fill")
-                                    .font(.system(size: 10))
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.white.opacity(0.8)) // More translucent for map
-                            .cornerRadius(20)
-                            .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
-                            
-                            Spacer()
-                            
-                            Circle()
-                                .fill(Color("MainBlue").opacity(0.2))
-                                .frame(width: 36, height: 36)
-                                .overlay(Text("🦦").font(.system(size: 20)))
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                        
+                       
                         // Title & Toggle
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Showing places in")
@@ -166,7 +143,7 @@ struct SpotsContainerView: View {
                         )
                 }
             }
-            .buttonStyle(StaticButtonStyle())
+            .buttonStyle(.plain)
             .ignoresSafeArea(edges: .bottom)
             .zIndex(20)
         }

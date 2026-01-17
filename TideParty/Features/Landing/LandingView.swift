@@ -6,7 +6,6 @@ struct LandingView: View {
     @State private var waveOffset: Double = 0
     
     var onFindSpots: () -> Void = {}
-    var onOpenCamera: () -> Void = {}
     
     var body: some View {
         ZStack(alignment: .top) {
@@ -54,12 +53,22 @@ struct LandingView: View {
                         
                         if let weather = viewModel.weather {
                             VStack {
-                                Image(systemName: weather.condition)
+                                // Choose correct palette colors for the SF Symbol
+                                let name = weather.condition
+                                let lower = name.lowercased()
+                                let isSun = lower.contains("sun")
+                                let isMoon = lower.contains("moon")
+                                
+                                Image(systemName: name)
                                     .resizable()
                                     .symbolRenderingMode(.palette)
-                                    .foregroundStyle(weather.condition.contains("moon") ? Color("MainBlue") : .yellow, .gray)
+                                    .foregroundStyle(
+                                        isSun ? .yellow : (isMoon ? Color("MainBlue") : .gray), // primary (sun/moon/cloud body)
+                                        .gray // secondary (clouds/accents)
+                                    )
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 40, height: 40)
+                                
                                 HStack{
                                     Text("\(weather.temp)°")
                                         .font(.system(size: 18, weight: .bold))
@@ -155,46 +164,42 @@ struct LandingView: View {
             .padding(.bottom, 100) // Clip in middle of waves
             
             // Bottom Wave Section (animated)
-            Button(action: {
-                onOpenCamera()
-            }) {
-                VStack(spacing: 0) {
-                    ZStack(alignment: .bottom) {
-                        // Background wave layers (lighter)
-                        WaveShape(offset: waveOffset + 0.3, amplitude: 8)
-                            .fill(Color("MainBlue").opacity(0.3))
-                            .frame(height: 70)
-                        
-                        WaveShape(offset: waveOffset + 0.6, amplitude: 6)
-                            .fill(Color("MainBlue").opacity(0.5))
-                            .frame(height: 60)
-                        
-                        // Main wave (solid)
-                        WaveShape(offset: waveOffset, amplitude: 10)
-                            .fill(Color("MainBlue"))
-                            .frame(height: 48)
-                    }
+            VStack(spacing: 0) {
+                Spacer()
+                ZStack(alignment: .bottom) {
+                    // Background wave layers (lighter)
+                    WaveShape(offset: waveOffset + 0.3, amplitude: 8)
+                        .fill(Color("MainBlue").opacity(0.3))
+                        .frame(height: 70)
                     
-                    // Solid blue area with content
-                    Color("MainBlue")
-                        .frame(height: 90)
-                        .overlay(
-                            VStack(spacing: 6) {
-                                Image(systemName: "camera")
-                                    .font(.system(size: 28, weight: .medium))
-                                    .foregroundColor(.white)
-                                
-                                Text("See anything cool?")
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(.white)
-                            }
-                            .offset(y: -8)
-                        )
+                    WaveShape(offset: waveOffset + 0.6, amplitude: 6)
+                        .fill(Color("MainBlue").opacity(0.5))
+                        .frame(height: 60)
+                    
+                    // Main wave (solid)
+                    WaveShape(offset: waveOffset, amplitude: 10)
+                        .fill(Color("MainBlue"))
+                        .frame(height: 48)
                 }
+                
+                // Solid blue area with content
+                Color("MainBlue")
+                    .frame(height: 90)
+                    .overlay(
+                        VStack(spacing: 6) {
+                            Image(systemName: "camera")
+                                .font(.system(size: 28, weight: .medium))
+                                .foregroundColor(.white)
+                            
+                            Text("See anything cool?")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        .offset(y: -8)
+                    )
             }
-            .buttonStyle(StaticButtonStyle())
+            .buttonStyle(.plain)
             .ignoresSafeArea(edges: .bottom)
-            .frame(maxHeight: .infinity, alignment: .bottom)
             .zIndex(10) // Keep waves on top of scroll content
         }
         .task {
@@ -209,12 +214,6 @@ struct LandingView: View {
     }
 }
 
-struct StaticButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-    }
-}
-
 // Old static graph view removed/replaced by Components/TideGraphView.swift usage
 // We need to remove the internal struct definition if we are importing the new one.
 // Since the new one is in the same module but different file, we just delete this block.
@@ -223,4 +222,3 @@ struct StaticButtonStyle: ButtonStyle {
 #Preview {
     LandingView()
 }
-
