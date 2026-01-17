@@ -86,14 +86,8 @@ struct LandingView: View {
                     }
                     .padding(.horizontal, 90)
                     
-                    // Map Card Placeholder
-                    RoundedRectangle(cornerRadius: 24)
-                        .fill(Color(hue: 0.25, saturation: 0.1, brightness: 0.9))
-                        .overlay(
-                            Text("Map Placeholder")
-                                .foregroundColor(.gray.opacity(0.5))
-                        )
-                        .frame(height: 220)
+                    // Map Card (Live)
+                    HomeMapCard()
                         .padding(.horizontal)
                     
                     // Tide Graph Card (Interactive)
