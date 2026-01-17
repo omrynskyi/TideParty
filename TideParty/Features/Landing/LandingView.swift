@@ -174,7 +174,7 @@ struct LandingView: View {
                 }
             }
             .ignoresSafeArea(.container, edges: .top) // let content occupy top safe area
-            .padding(.bottom, 100) // Clip in middle of waves
+            .padding(.bottom, 30) // Clip closer to bottom of waves
             
             // Bottom Wave Section (animated)
             VStack {
@@ -186,13 +186,13 @@ struct LandingView: View {
                         VStack(spacing: 6) {
                             Image(systemName: "camera")
                                 .font(.system(size: 28, weight: .medium))
-                            .foregroundColor(.white)
+                                .foregroundColor(.white)
                         
-                        Text("See anything cool?")
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.white)
+                            Text("See anything cool?")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white)
+                        }
                     }
-                }
             }
             .buttonStyle(StaticButtonStyle())
         }

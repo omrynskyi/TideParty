@@ -15,86 +15,11 @@ struct SpotsMapView: View {
             Map(position: $position, selection: $selectedSpot) {
                 UserAnnotation()
                 
-                // Show clusters or individual spots based on zoom level
+                // Use helper ViewBuilders to reduce complexity for type checker
                 if shouldCluster {
-                    ForEach(clusters) { cluster in
-                        if cluster.spots.count > 1 {
-                            // Cluster annotation - Apple Maps style
-                            Annotation("", coordinate: cluster.coordinate) {
-                                Text("\(cluster.spots.count) spots")
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.black)
-                                    .padding(.vertical, 8)
-                                    .padding(.horizontal, 12)
-                                    .background(Color.white)
-                                    .cornerRadius(12)
-                                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                            }
-                            .tag(cluster.spots.first)
-                        } else if let spot = cluster.spots.first {
-                            // Render individual spot polygon
-                            if !spot.polygon.isEmpty {
-                                MapPolygon(coordinates: spot.polygon.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
-                                    .foregroundStyle(Color.blue.opacity(0.3))
-                                    .stroke(Color.blue, lineWidth: 2)
-                                    .tag(spot)
-                            }
-                            
-                            // Render annotation offset above the polygon
-                            Annotation(spot.name, coordinate: offsetCoordinate(for: spot)) {
-                                VStack(spacing: 4) {
-                                    Text(spot.name)
-                                        .font(.system(size: 14, weight: .bold))
-                                    
-                                    if let distance = spot.distanceInMiles {
-                                        Text(String(format: "%.1f mi away", distance))
-                                            .font(.system(size: 10, weight: .medium))
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                                .padding(.vertical, 8)
-                                .padding(.horizontal, 12)
-                                .background(Color.white)
-                                .cornerRadius(12)
-                                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                                .scaleEffect(selectedSpot?.id == spot.id ? 1.1 : 1.0)
-                                .animation(.spring(), value: selectedSpot)
-                            }
-                            .tag(spot)
-                        }
-                    }
+                    clusterAnnotations
                 } else {
-                    ForEach(viewModel.spots) { spot in
-                        // Render polygon
-                        if !spot.polygon.isEmpty {
-                            MapPolygon(coordinates: spot.polygon.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
-                                .foregroundStyle(Color.blue.opacity(0.3))
-                                .stroke(Color.blue, lineWidth: 2)
-                                .tag(spot)
-                        }
-                        
-                        // Render annotation offset above the polygon
-                        Annotation(spot.name, coordinate: offsetCoordinate(for: spot)) {
-                            VStack(spacing: 4) {
-                                Text(spot.name)
-                                    .font(.system(size: 14, weight: .bold))
-                                
-                                if let distance = spot.distanceInMiles {
-                                    Text(String(format: "%.1f mi away", distance))
-                                        .font(.system(size: 10, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                }
-                            }
-                            .padding(.vertical, 8)
-                            .padding(.horizontal, 12)
-                            .background(Color.white)
-                            .cornerRadius(12)
-                            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-                            .scaleEffect(selectedSpot?.id == spot.id ? 1.1 : 1.0)
-                            .animation(.spring(), value: selectedSpot)
-                        }
-                        .tag(spot)
-                    }
+                    individualAnnotations
                 }
             }
             .mapControls {
@@ -166,6 +91,98 @@ struct SpotsMapView: View {
         }
     }
     
+    // MARK: - Map Content Builders
+    
+    @MapContentBuilder
+    private var clusterAnnotations: some MapContent {
+        ForEach(clusters) { cluster in
+            if cluster.spots.count > 1 {
+                // Cluster annotation - Apple Maps style
+                Annotation("", coordinate: cluster.coordinate) {
+                    Text("\(cluster.spots.count) spots")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.black)
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        .onTapGesture {
+                            zoomToCluster(cluster)
+                        }
+                }
+            } else {
+                // Single spots (reliably render using ForEach to avoid 'if let' builder issues)
+                ForEach(cluster.spots) { spot in
+                    // Render individual spot polygon
+                    if !spot.polygon.isEmpty {
+                        MapPolygon(coordinates: spot.polygon.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
+                            .foregroundStyle(Color.blue.opacity(0.3))
+                            .stroke(Color.blue, lineWidth: 2)
+                            .tag(spot)
+                    }
+                    
+                    // Render annotation offset above the polygon
+                    Annotation(spot.name, coordinate: offsetCoordinate(for: spot)) {
+                        VStack(spacing: 4) {
+                            Text(spot.name)
+                                .font(.system(size: 14, weight: .bold))
+                            
+                            if let distance = spot.distanceInMiles {
+                                Text(String(format: "%.1f mi away", distance))
+                                    .font(.system(size: 10, weight: .medium))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(Color.white)
+                        .cornerRadius(12)
+                        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        .scaleEffect(selectedSpot?.id == spot.id ? 1.1 : 1.0)
+                        .animation(.spring(), value: selectedSpot)
+                    }
+                    .tag(spot)
+                }
+            }
+        }
+    }
+    
+    @MapContentBuilder
+    private var individualAnnotations: some MapContent {
+        ForEach(viewModel.spots) { spot in
+            // Render polygon
+            if !spot.polygon.isEmpty {
+                MapPolygon(coordinates: spot.polygon.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
+                    .foregroundStyle(Color.blue.opacity(0.3))
+                    .stroke(Color.blue, lineWidth: 2)
+                    .tag(spot)
+            }
+            
+            // Render annotation offset above the polygon
+            Annotation(spot.name, coordinate: offsetCoordinate(for: spot)) {
+                VStack(spacing: 4) {
+                    Text(spot.name)
+                        .font(.system(size: 14, weight: .bold))
+                    
+                    if let distance = spot.distanceInMiles {
+                        Text(String(format: "%.1f mi away", distance))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .background(Color.white)
+                .cornerRadius(12)
+                .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+                .scaleEffect(selectedSpot?.id == spot.id ? 1.1 : 1.0)
+                .animation(.spring(), value: selectedSpot)
+            }
+            .tag(spot)
+        }
+    }
+
     // MARK: - Clustering Logic
     
     private var shouldCluster: Bool {
@@ -225,6 +242,43 @@ struct SpotsMapView: View {
         ])
     }
     
+
+
+    
+    // MARK: - Zoom Logic
+    
+    private func zoomToCluster(_ cluster: SpotCluster) {
+        let coords = cluster.spots.map { $0.location }
+        let latitudes = coords.map { $0.latitude }
+        let longitudes = coords.map { $0.longitude }
+        
+        guard let minLat = latitudes.min(),
+              let maxLat = latitudes.max(),
+              let minLon = longitudes.min(),
+              let maxLon = longitudes.max() else { return }
+              
+        let centerLat = (minLat + maxLat) / 2
+        let centerLon = (minLon + maxLon) / 2
+        let center = CLLocationCoordinate2D(latitude: centerLat, longitude: centerLon)
+        
+        // Add padding (approx 40% for breathing room)
+        let latSpan = (maxLat - minLat) * 1.4
+        let lonSpan = (maxLon - minLon) * 1.4
+        
+        // Ensure minimum zoom (roughly ~500m-1km)
+        // 0.005 degrees is approx 550m
+        let minSpan = 0.005 
+        
+        let span = MKCoordinateSpan(
+            latitudeDelta: max(latSpan, minSpan),
+            longitudeDelta: max(lonSpan, minSpan)
+        )
+        
+        withAnimation(.easeInOut(duration: 0.8)) {
+            position = .region(MKCoordinateRegion(center: center, span: span))
+            selectedSpot = nil // Clear selection when zooming into cluster
+        }
+    }
 
 }
 
