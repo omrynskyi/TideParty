@@ -5,6 +5,8 @@ struct LandingView: View {
     @StateObject private var viewModel = LandingViewModel()
     @State private var waveOffset: Double = 0
     
+    var onFindSpots: () -> Void = {}
+    
     var body: some View {
         ZStack(alignment: .top) {
             // Background - blue at bottom covers home bar area only
@@ -16,7 +18,7 @@ struct LandingView: View {
             .ignoresSafeArea()
             
             ScrollView {
-                VStack(spacing: 20) {
+                VStack(spacing: 16) {
                     // Header (scrolls with content)
                     HStack {
                         HStack {
@@ -38,7 +40,7 @@ struct LandingView: View {
                             .overlay(Text("🦦").font(.system(size: 20)))
                     }
                     .padding(.horizontal, 16)
-                    .padding(.top, 8)
+                    .padding(.top, 50) // small top padding for breathing room
                     
                     // Hero Message & Weather
                     HStack(alignment: .top) {
@@ -74,10 +76,10 @@ struct LandingView: View {
                     
                     // Find Spots Button
                     Button(action: {
-                        // Action
+                        onFindSpots()
                     }) {
                         Text("Find Spots Nearby")
-                            .font(.custom("Inter-SemiBold", size: 16))
+                            .font(.system(size: 16,weight: .semibold))
                             .foregroundColor(.white)
                             .padding(.vertical, 14)
                             .padding(.horizontal, 24)
@@ -147,10 +149,9 @@ struct LandingView: View {
                     // Bottom padding to account for sticky wave section
                     Spacer().frame(height: 180)
                 }
-                .padding(.top)
             }
+            .ignoresSafeArea(.container, edges: .top) // let content occupy top safe area
             .padding(.bottom, 100) // Clip in middle of waves
-            .clipped()
             
             // Bottom Wave Section (animated)
             VStack(spacing: 0) {
