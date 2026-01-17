@@ -20,11 +20,14 @@ class ScannerViewModel: NSObject, ObservableObject {
     @Published var confidence: Float = 0.0
     @Published var isHighConfidence: Bool = false
     @Published var isSessionRunning: Bool = false
+    @Published var capturedImage: UIImage?
+    @Published var canCapture: Bool = false
     
     // MARK: - Camera
     let captureSession = AVCaptureSession()
     private let videoOutput = AVCaptureVideoDataOutput()
     private let processingQueue = DispatchQueue(label: "com.tideparty.scanner")
+    private var lastPixelBuffer: CVPixelBuffer?
     
     // MARK: - Vision
     private var classificationRequest: VNCoreMLRequest?
@@ -120,28 +123,70 @@ class ScannerViewModel: NSObject, ObservableObject {
     
     // MARK: - Session Control
     func startSession() {
-        guard !captureSession.isRunning else { return }
+        print("📷 ViewModel.startSession() called")
+        print("📷 Session currently running: \(captureSession.isRunning)")
+        guard !captureSession.isRunning else {
+            print("📷 Session already running, returning early")
+            return
+        }
         processingQueue.async { [weak self] in
+            print("📷 Starting session on processing queue...")
             self?.captureSession.startRunning()
             DispatchQueue.main.async {
+                print("📷 Session started, isRunning: \(self?.captureSession.isRunning ?? false)")
                 self?.isSessionRunning = true
             }
         }
     }
     
     func stopSession() {
-        guard captureSession.isRunning else { return }
+        print("📷 ViewModel.stopSession() called")
+        guard captureSession.isRunning else {
+            print("📷 Session not running, returning early")
+            return
+        }
         processingQueue.async { [weak self] in
+            print("📷 Stopping session on processing queue...")
             self?.captureSession.stopRunning()
             DispatchQueue.main.async {
+                print("📷 Session stopped")
                 self?.isSessionRunning = false
             }
         }
     }
     
+    // MARK: - Image Capture
+    func captureCurrentFrame() {
+        print("📷 captureCurrentFrame() called")
+        guard canCapture, let pixelBuffer = lastPixelBuffer else {
+            print("📷 Cannot capture - canCapture: \(canCapture), hasBuffer: \(lastPixelBuffer != nil)")
+            return
+        }
+        
+        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        let context = CIContext()
+        
+        // Rotate the image to correct orientation
+        let rotatedImage = ciImage.oriented(.right)
+        
+        guard let cgImage = context.createCGImage(rotatedImage, from: rotatedImage.extent) else {
+            print("📷 Failed to create CGImage")
+            return
+        }
+        
+        capturedImage = UIImage(cgImage: cgImage)
+        print("📷 Image captured successfully, keeping session running for camera peek")
+        // NOTE: Don't stop session - keep it running for camera peek in result view
+    }
+    
     // MARK: - Classification Handler
     private func handleClassification(request: VNRequest, error: Error?) {
         isProcessing = false
+        
+        if let error = error {
+            print("Classification error: \(error.localizedDescription)")
+            return
+        }
         
         guard let results = request.results as? [VNClassificationObservation],
               let top = results.first else { return }
@@ -152,23 +197,27 @@ class ScannerViewModel: NSObject, ObservableObject {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             
-            self.confidence = conf
-            
-            if conf > 0.9 {
-                self.classificationLabel = name
+            self.confidence = conf            
+            if conf > 4 {
+                // High confidence - Name + Percentage
+                self.classificationLabel = "\(name)"
                 self.isHighConfidence = true
+                self.canCapture = true
                 
-                // Haptic on new discovery
                 if self.lastIdentification != name {
                     self.haptic.impactOccurred()
                     self.lastIdentification = name
                 }
-            } else if conf > 0.8 {
-                self.classificationLabel = name
+            } else if conf > 3 {
+                // Medium confidence - Name + Percentage
+                self.classificationLabel = "\(name)"
                 self.isHighConfidence = false
+                self.canCapture = true
             } else {
+                // Low confidence - "Scanning" + Percentage
                 self.classificationLabel = "Scanning..."
                 self.isHighConfidence = false
+                self.canCapture = false
                 self.lastIdentification = nil
             }
         }
@@ -204,6 +253,9 @@ extension ScannerViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // Perform classification on the processing queue
         Task { @MainActor in
+            // Store latest frame for capture
+            self.lastPixelBuffer = pixelBuffer
+            
             guard !self.isProcessing, let request = self.classificationRequest else { return }
             self.isProcessing = true
             
@@ -212,4 +264,3 @@ extension ScannerViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
         }
     }
 }
-

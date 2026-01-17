@@ -8,90 +8,136 @@
 import SwiftUI
 import Combine
 import UIKit
+import AVFoundation
 
 struct ScannerView: View {
     @StateObject private var viewModel = ScannerViewModel()
     @Environment(\.dismiss) private var dismiss
     
+    @State private var showResult = false
+    @State private var resultOffset: CGFloat = UIScreen.main.bounds.height
+    @State private var capturedLabel: String = ""
+    
     var body: some View {
         ZStack {
-            // Camera Preview (full screen)
+            // Camera Preview (full screen - always visible as background)
             CameraPreview(session: viewModel.captureSession)
                 .ignoresSafeArea()
             
-            // Classification Label (top)
-            VStack {
-                HStack {
-                    // Back button
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 44, height: 44)
+            // Scanner UI (label + back button) - hidden when showing result
+            if !showResult {
+                // Classification Label (top)
+                VStack(spacing: 0) {
+                    HStack {
+                        // Back button
+                        Button(action: { dismiss() }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(width: 44, height: 44)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                        }
+                        
+                        Spacer()
+                        
+                        // Classification label
+                        Text(viewModel.classificationLabel)
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
                             .background(.ultraThinMaterial)
-                            .clipShape(Circle())
+                            .clipShape(Capsule())
+                            .animation(.easeInOut(duration: 0.2), value: viewModel.classificationLabel)
+                        
+                        Spacer()
+                        
+                        // Spacer for symmetry
+                        Color.clear
+                            .frame(width: 44, height: 44)
                     }
-                    
-                    Spacer()
-                    
-                    // Classification label
-                    Text(viewModel.classificationLabel)
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.primary)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(.ultraThinMaterial)
-                        .clipShape(Capsule())
-                        .animation(.easeInOut(duration: 0.2), value: viewModel.classificationLabel)
-                    
-                    Spacer()
-                    
-                    // Spacer for symmetry
-                    Color.clear
-                        .frame(width: 44, height: 44)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 8)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .animation(nil, value: UUID())
                 
-                Spacer()
+                // Capture Button + Wave (bottom)
+                VStack(spacing: 0) {
+                    Button(action: {
+                        captureAndTransition()
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(viewModel.canCapture ? .white : .gray.opacity(0.5))
+                                .frame(width: 70, height: 70)
+                            
+                            Circle()
+                                .stroke(Color.white.opacity(0.5), lineWidth: 4)
+                                .frame(width: 82, height: 82)
+                        }
+                    }
+                    .disabled(!viewModel.canCapture)
+                    .padding(.bottom, 20)
+                    
+                    // Wave at bottom
+                    ScannerWaveView()
+                        .frame(height: 90)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .ignoresSafeArea(edges: .bottom)
+                .animation(nil, value: viewModel.classificationLabel)
+                .animation(nil, value: UUID())
             }
             
-            // Capture Button + Wave (bottom)
-            VStack {
-                Spacer()
-                
-                // Capture button
-                Button(action: {
-                    // Capture action - haptic feedback
-                    let generator = UIImpactFeedbackGenerator(style: .medium)
-                    generator.impactOccurred()
-                }) {
-                    ZStack {
-                        Circle()
-                            .fill(.white)
-                            .frame(width: 70, height: 70)
-                        
-                        Circle()
-                            .stroke(Color.white.opacity(0.5), lineWidth: 4)
-                            .frame(width: 82, height: 82)
+            // Discovery Result (slides up as overlay)
+            if showResult, let image = viewModel.capturedImage {
+                DiscoveryResultView(
+                    image: image,
+                    capturedLabel: capturedLabel,
+                    onDismiss: {
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            resultOffset = UIScreen.main.bounds.height
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showResult = false
+                            viewModel.capturedImage = nil
+                        }
                     }
-                }
-                .padding(.bottom, 20)
-                
-                // Wave at bottom
-                WaveShape()
-                    .fill(Color("MainBlue"))
-                    .frame(height: 80)
-                    .ignoresSafeArea(edges: .bottom)
+                )
+                .offset(y: resultOffset)
+                .ignoresSafeArea()
             }
         }
         .onAppear {
             viewModel.startSession()
         }
         .onDisappear {
-            viewModel.stopSession()
+            // Only stop session if navigating away from scanner
+            if !showResult {
+                viewModel.stopSession()
+            }
         }
         .statusBarHidden(true)
+    }
+    
+    private func captureAndTransition() {
+        guard viewModel.canCapture else { return }
+        
+        // Capture label at this moment (before it might change)
+        capturedLabel = viewModel.classificationLabel
+        
+        // Capture current frame
+        viewModel.captureCurrentFrame()
+        
+        // Show result and animate slide up
+        showResult = true
+        resultOffset = UIScreen.main.bounds.height
+        
+        withAnimation(.easeOut(duration: 0.5)) {
+            resultOffset = 0
+        }
     }
 }
 

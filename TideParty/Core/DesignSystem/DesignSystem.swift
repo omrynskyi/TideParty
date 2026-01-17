@@ -50,3 +50,54 @@ struct WaveShape: Shape {
         return path
     }
 }
+
+// Reusable Static Button Style (No highlight)
+struct StaticButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+    }
+}
+
+// Reusable Animated Wave View
+struct AnimatedWaveView<Content: View>: View {
+    @State private var waveOffset: Double = 0
+    let content: Content
+    
+    init(@ViewBuilder content: () -> Content = { EmptyView() }) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            ZStack(alignment: .bottom) {
+                // Background wave layers (lighter)
+                WaveShape(offset: waveOffset + 0.3, amplitude: 8)
+                    .fill(Color("MainBlue").opacity(0.3))
+                    .frame(height: 70)
+                
+                WaveShape(offset: waveOffset + 0.6, amplitude: 6)
+                    .fill(Color("MainBlue").opacity(0.5))
+                    .frame(height: 60)
+                
+                // Main wave (solid)
+                WaveShape(offset: waveOffset, amplitude: 10)
+                    .fill(Color("MainBlue"))
+                    .frame(height: 48)
+            }
+            
+            // Solid blue area with content
+            Color("MainBlue")
+                .frame(height: 90)
+                .overlay(
+                    content
+                        .offset(y: -8)
+                )
+        }
+        .ignoresSafeArea(edges: .bottom)
+        .onAppear {
+            withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
+                waveOffset = 1.0
+            }
+        }
+    }
+}
