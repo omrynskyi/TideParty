@@ -163,7 +163,7 @@ class ScannerViewModel: NSObject, ObservableObject {
                     self.haptic.impactOccurred()
                     self.lastIdentification = name
                 }
-            } else if conf > 0.7 {
+            } else if conf > 0.8 {
                 self.classificationLabel = name
                 self.isHighConfidence = false
             } else {

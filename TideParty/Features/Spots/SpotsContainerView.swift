@@ -143,7 +143,7 @@ struct SpotsContainerView: View {
                         )
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StaticButtonStyle())
             .ignoresSafeArea(edges: .bottom)
             .zIndex(20)
         }

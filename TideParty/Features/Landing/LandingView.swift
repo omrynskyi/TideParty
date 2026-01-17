@@ -6,6 +6,7 @@ struct LandingView: View {
     @State private var waveOffset: Double = 0
     
     var onFindSpots: () -> Void = {}
+    var onOpenCamera: () -> Void = {}
     
     var body: some View {
         ZStack(alignment: .top) {
@@ -164,41 +165,45 @@ struct LandingView: View {
             .padding(.bottom, 100) // Clip in middle of waves
             
             // Bottom Wave Section (animated)
-            VStack(spacing: 0) {
-                Spacer()
-                ZStack(alignment: .bottom) {
-                    // Background wave layers (lighter)
-                    WaveShape(offset: waveOffset + 0.3, amplitude: 8)
-                        .fill(Color("MainBlue").opacity(0.3))
-                        .frame(height: 70)
+            Button(action: {
+                onOpenCamera()
+            }) {
+                VStack(spacing: 0) {
+                    Spacer()
+                    ZStack(alignment: .bottom) {
+                        // Background wave layers (lighter)
+                        WaveShape(offset: waveOffset + 0.3, amplitude: 8)
+                            .fill(Color("MainBlue").opacity(0.3))
+                            .frame(height: 70)
+                        
+                        WaveShape(offset: waveOffset + 0.6, amplitude: 6)
+                            .fill(Color("MainBlue").opacity(0.5))
+                            .frame(height: 60)
+                        
+                        // Main wave (solid)
+                        WaveShape(offset: waveOffset, amplitude: 10)
+                            .fill(Color("MainBlue"))
+                            .frame(height: 48)
+                    }
                     
-                    WaveShape(offset: waveOffset + 0.6, amplitude: 6)
-                        .fill(Color("MainBlue").opacity(0.5))
-                        .frame(height: 60)
-                    
-                    // Main wave (solid)
-                    WaveShape(offset: waveOffset, amplitude: 10)
-                        .fill(Color("MainBlue"))
-                        .frame(height: 48)
+                    // Solid blue area with content
+                    Color("MainBlue")
+                        .frame(height: 90)
+                        .overlay(
+                            VStack(spacing: 6) {
+                                Image(systemName: "camera")
+                                    .font(.system(size: 28, weight: .medium))
+                                    .foregroundColor(.white)
+                                
+                                Text("See anything cool?")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            .offset(y: -8)
+                        )
                 }
-                
-                // Solid blue area with content
-                Color("MainBlue")
-                    .frame(height: 90)
-                    .overlay(
-                        VStack(spacing: 6) {
-                            Image(systemName: "camera")
-                                .font(.system(size: 28, weight: .medium))
-                                .foregroundColor(.white)
-                            
-                            Text("See anything cool?")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                        .offset(y: -8)
-                    )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(StaticButtonStyle())
             .ignoresSafeArea(edges: .bottom)
             .zIndex(10) // Keep waves on top of scroll content
         }
@@ -221,4 +226,10 @@ struct LandingView: View {
 
 #Preview {
     LandingView()
+}
+
+struct StaticButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+    }
 }
