@@ -131,6 +131,11 @@ struct ScannerView: View {
         // Capture current frame
         viewModel.captureCurrentFrame()
         
+        // Track creature capture (only increments if unique)
+        Task {
+            try? await UserStatsService.shared.incrementCreature(name: capturedLabel)
+        }
+        
         // Show result and animate slide up
         showResult = true
         resultOffset = UIScreen.main.bounds.height

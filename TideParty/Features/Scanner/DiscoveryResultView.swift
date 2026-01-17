@@ -14,6 +14,87 @@ extension Color {
     static let buttonPurple = Color(red: 0.35, green: 0.40, blue: 0.95) // #5966F2 - lighter purple buttons
 }
 
+// MARK: - Crackling Fire Animation
+struct CracklingFire: View {
+    @State private var scale: CGFloat = 1.0
+    @State private var rotation: Double = 0
+    @State private var offsetX: CGFloat = 0
+    
+    var body: some View {
+        Text("🔥")
+            .font(.system(size: 32))
+            .scaleEffect(scale)
+            .rotationEffect(.degrees(rotation))
+            .offset(x: offsetX)
+            .onAppear {
+                // Fast crackling scale
+                withAnimation(.easeInOut(duration: 0.08).repeatForever(autoreverses: true)) {
+                    scale = 1.15
+                }
+                // More intense wobble
+                withAnimation(.easeInOut(duration: 0.1).repeatForever(autoreverses: true)) {
+                    rotation = 5
+                }
+                // Horizontal shake
+                withAnimation(.easeInOut(duration: 0.06).repeatForever(autoreverses: true)) {
+                    offsetX = 2
+                }
+            }
+    }
+}
+
+// MARK: - Trembling Progress Bar
+struct TremblingProgressBar: View {
+    let progress: CGFloat
+    @State private var offsetX: CGFloat = 0
+    @State private var offsetY: CGFloat = 0
+    
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                // Gray background (smaller than red bar)
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Color.white.opacity(0.3))
+                    .frame(height: 16)
+                
+                // Red fill with highlight + tremble
+                ZStack(alignment: .top) {
+                    // Base red
+                    RoundedRectangle(cornerRadius: 13)
+                        .fill(Color.red)
+                        .frame(width: geo.size.width * progress, height: 26)
+                    
+                    // Top highlight
+                    RoundedRectangle(cornerRadius: 13)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.white.opacity(0.4), Color.clear],
+                                startPoint: .top,
+                                endPoint: .center
+                            )
+                        )
+                        .frame(width: geo.size.width * progress, height: 26)
+                }
+                .offset(x: offsetX, y: offsetY)
+                
+                // Animated crackling fire
+                CracklingFire()
+                    .offset(x: geo.size.width * progress - 16, y: 0)
+            }
+        }
+        .frame(height: 34)
+        .onAppear {
+            // Subtle horizontal tremble
+            withAnimation(.easeInOut(duration: 0.05).repeatForever(autoreverses: true)) {
+                offsetX = 1
+            }
+            // Subtle vertical tremble
+            withAnimation(.easeInOut(duration: 0.07).repeatForever(autoreverses: true)) {
+                offsetY = 0.5
+            }
+        }
+    }
+}
 struct DiscoveryResultView: View {
     let image: UIImage
     let capturedLabel: String // Label captured at button press time
@@ -166,39 +247,7 @@ struct ProgressStreakCard: View {
                 .foregroundColor(.white.opacity(0.9))
             
             // Progress bar matching mockup
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    // Gray background
-                    RoundedRectangle(cornerRadius: 13)
-                        .fill(Color.white.opacity(0.3))
-                        .frame(height: 26)
-                    
-                    // Red fill with highlight
-                    ZStack(alignment: .top) {
-                        // Base red
-                        RoundedRectangle(cornerRadius: 13)
-                            .fill(Color.red)
-                            .frame(width: geo.size.width * 0.78, height: 26)
-                        
-                        // Top highlight (lighter strip)
-                        RoundedRectangle(cornerRadius: 13)
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.white.opacity(0.4), Color.clear],
-                                    startPoint: .top,
-                                    endPoint: .center
-                                )
-                            )
-                            .frame(width: geo.size.width * 0.78, height: 26)
-                    }
-                    
-                    // Fire emoji at end of progress
-                    Text("🔥")
-                        .font(.system(size: 30))
-                        .offset(x: geo.size.width * 0.78 - 14, y: 0)
-                }
-            }
-            .frame(height: 30)
+            TremblingProgressBar(progress: 0.78)
         }
         .padding(20)
         .background(Color.cardPurple)
