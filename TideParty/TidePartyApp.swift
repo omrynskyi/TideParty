@@ -22,7 +22,7 @@ struct TidePartyApp: App {
                 .navigationDestination(for: Route.self) { route in
                     switch route {
                     case .spots:
-                        SpotsListView()
+                        SpotsContainerView()
                     }
                 }
             }

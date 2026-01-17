@@ -32,16 +32,6 @@ struct SpotCardView: View {
                                 .font(.system(size: 10))
                                 .foregroundColor(.gray)
                         }
-                        
-                        if let distance = spot.distanceInMiles {
-                            Text("•")
-                                .font(.system(size: 13))
-                                .foregroundColor(.gray)
-                            
-                            Text(String(format: "%.1f mi", distance))
-                                .font(.system(size: 13))
-                                .foregroundColor(.gray)
-                        }
                     }
                 }
                 
@@ -65,7 +55,7 @@ struct SpotCardView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(spot.isLocalsFavorite ? .white : Color("MainBlue"))
                         .padding(.vertical, 12)
-                        .padding(.horizontal, 40)
+                        .padding(.horizontal, 20)
                         .background(
                             spot.isLocalsFavorite
                                 ? Color("MainBlue")
@@ -78,8 +68,8 @@ struct SpotCardView: View {
         }
         .padding(16)
         .background(
-            spot.isLocalsFavorite 
-                ? Color("MainBlue").opacity(0.1) 
+            spot.isLocalsFavorite
+                ? Color("LocalsFavoriteBG") // Uses asset color #EBF3FE
                 : Color.white
         )
         .cornerRadius(16)

@@ -2,7 +2,7 @@ import Foundation
 import CoreLocation
 import FirebaseFirestore
 
-struct TideSpot: Identifiable, Codable {
+struct TideSpot: Identifiable, Codable, Hashable {
     let id: String
     let name: String
     let rating: Int
@@ -27,5 +27,13 @@ struct TideSpot: Identifiable, Codable {
     
     enum CodingKeys: String, CodingKey {
         case id, name, rating, location, polygon, imageName
+    }
+    
+    static func == (lhs: TideSpot, rhs: TideSpot) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
