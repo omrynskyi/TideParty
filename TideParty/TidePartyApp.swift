@@ -10,7 +10,8 @@ struct TidePartyApp: App {
     
     var body: some Scene {
         WindowGroup {
-            SpotsListView()  // Test spots list
+            ScannerView()
+            // SpotsListView()
             // LandingView()
         }
     }
