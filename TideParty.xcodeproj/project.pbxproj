@@ -7,14 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4243FFC42F1B40E600098840 /* TidePoolIdentifier.mlpackage in Sources */ = {isa = PBXBuildFile; fileRef = 4243FFC32F1B40E600098840 /* TidePoolIdentifier.mlpackage */; };
 		7C3C23602F1B38AC0074F0BF /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C235F2F1B38AC0074F0BF /* FirebaseAuth */; };
 		7C3C23622F1B38AC0074F0BF /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C23612F1B38AC0074F0BF /* FirebaseFirestore */; };
 		7C3C23642F1B38AC0074F0BF /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C23632F1B38AC0074F0BF /* FirebaseStorage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		4243FFC32F1B40E600098840 /* TidePoolIdentifier.mlpackage */ = {isa = PBXFileReference; lastKnownFileType = folder.mlpackage; path = TidePoolIdentifier.mlpackage; sourceTree = "<group>"; };
 		7C3C234E2F1B36C70074F0BF /* TideParty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TideParty.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -45,7 +43,6 @@
 			children = (
 				7C3C23502F1B36C70074F0BF /* TideParty */,
 				7C3C234F2F1B36C70074F0BF /* Products */,
-				4243FFC32F1B40E600098840 /* TidePoolIdentifier.mlpackage */,
 			);
 			sourceTree = "<group>";
 		};
@@ -137,7 +134,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4243FFC42F1B40E600098840 /* TidePoolIdentifier.mlpackage in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,7 +273,7 @@
 				DEVELOPMENT_TEAM = 5T9RYN6378;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Accessing camera to scan for Tide Animals";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Tide Party uses your location to find nearby tide pools and provide local weather information.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -311,7 +307,7 @@
 				DEVELOPMENT_TEAM = 5T9RYN6378;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Accessing camera to scan for Tide Animals";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Tide Party uses your location to find nearby tide pools and provide local weather information.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

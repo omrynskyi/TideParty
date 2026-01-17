@@ -10,17 +10,6 @@ protocol TideServiceProtocol {
     func fetchTides() async throws -> TideData
 }
 
-// MARK: - Mocks
-
-class MockWeatherService: WeatherServiceProtocol {
-    func fetchWeather() async throws -> WeatherData {
-        // Simulate network delay
-        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s
-        
-        // Return "Good Day" condition
-        return WeatherData(temp: 68, condition: "Sunny", isSunny: true)
-    }
-}
 
 class MockTideService: TideServiceProtocol {
     func fetchTides() async throws -> TideData {

@@ -10,36 +10,42 @@ struct DesignSystem {
 }
 
 struct WaveShape: Shape {
+    var offset: Double = 0  // Phase offset for layered waves
+    var amplitude: Double = 20  // Wave amplitude
+    
+    // Make offset animatable for smooth wave motion
+    var animatableData: Double {
+        get { offset }
+        set { offset = newValue }
+    }
+    
     func path(in rect: CGRect) -> Path {
         var path = Path()
         
-        // Start at bottom left
-        path.move(to: CGPoint(x: 0, y: rect.maxY))
-        
-        // Draw up to start of wave (left side)
-        path.addLine(to: CGPoint(x: 0, y: rect.maxY * 0.7))
-        
-        // Create a gentle sine wave
-        // We'll prioritize the look from the mockup: flat-ish start, then a rise.
-        // Actually, looking at the mockup, it looks like a big swell.
-        // Let's do a simple sine wave for now.
-        
         let width = rect.width
         let height = rect.height
-        let midHeight = height * 0.6
-        let waveHeight = height * 0.2
         
-        path.addCurve(
-            to: CGPoint(x: width, y: height * 0.5),
-            control1: CGPoint(x: width * 0.4, y: midHeight - waveHeight),
-            control2: CGPoint(x: width * 0.7, y: midHeight + waveHeight)
-        )
+        // Start at bottom left
+        path.move(to: CGPoint(x: 0, y: height))
         
-        // Line down to bottom right
-        path.addLine(to: CGPoint(x: width, y: height))
+        // Draw wave using sine function for organic look
+        let resolution = 60  // Reduced for performance
+        for i in 0...resolution {
+            let x = (Double(i) / Double(resolution)) * width
+            
+            // Multiple sine waves combined for organic look
+            let normalizedX = x / width
+            let wave1 = sin((normalizedX * 2 * .pi) + (offset * .pi * 2)) * amplitude
+            let wave2 = sin((normalizedX * 4 * .pi) + (offset * .pi * 2)) * (amplitude * 0.3)  // Full cycle for seamless loop
+            
+            let y = height * 0.4 - wave1 - wave2
+            path.addLine(to: CGPoint(x: x, y: y))
+        }
         
         // Close path
+        path.addLine(to: CGPoint(x: width, y: height))
         path.addLine(to: CGPoint(x: 0, y: height))
+        path.closeSubpath()
         
         return path
     }
