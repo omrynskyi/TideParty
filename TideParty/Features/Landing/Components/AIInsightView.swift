@@ -4,7 +4,7 @@ import SwiftUI
 struct AIInsightView: View {
     let insightText: String
     let isLoading: Bool
-    var onRefresh: (() -> Void)? = nil
+
     @State private var isExpanded = false
     
     var body: some View {
@@ -47,24 +47,7 @@ struct AIInsightView: View {
                     
                     Spacer()
                     
-                    // Refresh button (debug)
-                    if let onRefresh = onRefresh {
-                        Button(action: {
-                            onRefresh()
-                        }) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.purple.opacity(0.1))
-                                    .frame(width: 36, height: 36)
-                                
-                                Image(systemName: "arrow.clockwise")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.purple)
-                            }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                    
+
                     // Collapse indicator
                     ZStack {
                         Circle()

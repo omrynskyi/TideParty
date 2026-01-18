@@ -228,12 +228,7 @@ struct LandingView: View {
                     // AI Insights Card
                     AIInsightView(
                         insightText: viewModel.aiInsightText,
-                        isLoading: viewModel.isLoadingInsight,
-                        onRefresh: {
-                            Task {
-                                await viewModel.fetchSmartInsight(forceRefresh: true)
-                            }
-                        }
+                        isLoading: viewModel.isLoadingInsight
                     )
                     .padding()
                     
