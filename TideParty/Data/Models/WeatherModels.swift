@@ -5,6 +5,7 @@ import Foundation
 struct OpenMeteoResponse: Codable {
     let current: CurrentWeather?
     let minutely_15: Minutely15?
+    let daily: Daily?
     
     struct CurrentWeather: Codable {
         let temperature_2m: Double
@@ -16,6 +17,11 @@ struct OpenMeteoResponse: Codable {
         let time: [String]
         let temperature_2m: [Double]
         let weather_code: [Int]
+    }
+    
+    struct Daily: Codable {
+        let sunrise: [String]
+        let sunset: [String]
     }
 }
 

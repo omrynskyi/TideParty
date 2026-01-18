@@ -3,6 +3,7 @@ import Combine
 
 struct LandingView: View {
     @StateObject private var viewModel = LandingViewModel()
+    @State private var isWeatherExpanded = false
     
     var onFindSpots: () -> Void = {}
     var onOpenCamera: () -> Void = {}
@@ -48,46 +49,86 @@ struct LandingView: View {
                     .padding(.top, 50) // small top padding for breathing room
                     
                     // Hero Message & Weather
-                    HStack(alignment: .top) {
-                        Text(viewModel.heroMessage)
-                            .font(.system(size: 30, weight: .bold))
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
-                        
-                        Spacer()
-                        
-                        if let weather = viewModel.weather {
-                            VStack {
-                                // Choose correct palette colors for the SF Symbol
-                                let name = weather.condition
-                                let lower = name.lowercased()
-                                let isSun = lower.contains("sun")
-                                let isMoon = lower.contains("moon")
-                                
-                                Image(systemName: name)
-                                    .resizable()
-                                    .symbolRenderingMode(.palette)
-                                    .foregroundStyle(
-                                        isSun ? .yellow : (isMoon ? Color("MainBlue") : .gray), // primary (sun/moon/cloud body)
-                                        .gray // secondary (clouds/accents)
-                                    )
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 40, height: 40)
-                                
-                                HStack{
-                                    Text("\(weather.temp)°")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .kerning(-1.0)
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .top) {
+                            Text(viewModel.heroMessage)
+                                .font(.system(size: 30, weight: .bold))
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                            
+                            Spacer()
+                            
+                            if let weather = viewModel.weather {
+                                VStack {
+                                    // Choose correct palette colors for the SF Symbol
+                                    let name = weather.condition
+                                    let lower = name.lowercased()
+                                    let isSun = lower.contains("sun")
+                                    let isMoon = lower.contains("moon")
                                     
-                                    Text("\(weather.forecastTemp ?? 0)° in 2h")
-                                        .font(.caption)
-                                        .foregroundColor(.gray)
-                                        .kerning(-0.5)
+                                    let palette = getPalette(for: name)
+                                    Image(systemName: name)
+                                        .resizable()
+                                        .symbolRenderingMode(.palette)
+                                        .foregroundStyle(palette.0, palette.1)
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 40, height: 40)
+                                    
+                                    HStack{
+                                        Text("\(weather.temp)°")
+                                            .font(.system(size: 18, weight: .bold))
+                                            .kerning(-1.0)
+                                        
+                                        Text("\(weather.forecastTemp ?? 0)° in 2h")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                            .kerning(-0.5)
+                                    }
+                                }
+                                .padding(8)
+                                .background(isWeatherExpanded ? Color.gray.opacity(0.1) : Color.clear)
+                                .cornerRadius(12)
+                                .onTapGesture {
+                                    withAnimation(.spring()) {
+                                        isWeatherExpanded.toggle()
+                                    }
                                 }
                             }
                         }
+                        .padding(.horizontal)
+                        
+                        if isWeatherExpanded {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 20) {
+                                    ForEach(viewModel.weatherTimeline.filter { $0.date >= Date() && $0.date <= Date().addingTimeInterval(21600) }) { point in
+                                        VStack(spacing: 6) {
+                                            Text(point.date.formatted(date: .omitted, time: .shortened))
+                                                .font(.caption2)
+                                                .foregroundColor(.gray)
+                                            
+                                            let name = point.conditionIcon
+                                            let lower = name.lowercased()
+                                            let isSun = lower.contains("sun")
+                                            let isMoon = lower.contains("moon")
+                                            
+                                            let palette = getPalette(for: name)
+                                            Image(systemName: name)
+                                                .resizable()
+                                                .symbolRenderingMode(.palette)
+                                                .foregroundStyle(palette.0, palette.1)
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 24, height: 24)
+                                            
+                                            Text("\(point.temp)°")
+                                                .font(.system(size: 14, weight: .medium))
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal)
+                                .padding(.bottom, 8)
+                            }
+                        }
                     }
-                    .padding(.horizontal)
                     
                     // Find Spots Button
                     Button(action: {
@@ -147,10 +188,11 @@ struct LandingView: View {
                                             Text("\(weatherPoint.temp)°")
                                                 .font(.system(size: 13, weight: .medium))
                                                 .foregroundColor(.black)
+                                            let palette = getPalette(for: weatherPoint.conditionIcon)
                                             Image(systemName: weatherPoint.conditionIcon)
                                                 .font(.system(size: 11))
                                                 .symbolRenderingMode(.palette)
-                                                .foregroundStyle(.yellow, .gray)
+                                                .foregroundStyle(palette.0, palette.1)
                                         }
                                     }
                                 }
@@ -203,6 +245,21 @@ struct LandingView: View {
             await viewModel.refreshData()
         }
 
+    }
+    
+    private func getPalette(for icon: String) -> (Color, Color) {
+        let lower = icon.lowercased()
+        if lower.contains("cloud") {
+            let cloud = Color.gray
+            if lower.contains("sun") { return (cloud, .yellow) }
+            if lower.contains("moon") { return (cloud, Color("MainBlue")) }
+            if lower.contains("rain") { return (cloud, Color("MainBlue")) }
+            if lower.contains("bolt") { return (cloud, .yellow) }
+            return (cloud, cloud)
+        }
+        if lower.contains("sun") { return (.yellow, .orange) }
+        if lower.contains("moon") { return (Color("MainBlue"), .yellow) }
+        return (.gray, .gray)
     }
 }
 

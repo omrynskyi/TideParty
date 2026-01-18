@@ -2,7 +2,7 @@ import Foundation
 
 class WeatherService: WeatherServiceProtocol {
     
-    private let urlString = "https://api.open-meteo.com/v1/forecast?latitude=36.9741&longitude=-122.0308&current=temperature_2m,weather_code,is_day&minutely_15=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles"
+    private let urlString = "https://api.open-meteo.com/v1/forecast?latitude=36.9741&longitude=-122.0308&current=temperature_2m,weather_code,is_day&minutely_15=temperature_2m,weather_code&daily=sunrise,sunset&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles"
     
     func fetchWeather() async throws -> WeatherData {
         // NOTE: The Protocol currently expects 'WeatherData'. 
@@ -87,19 +87,47 @@ class WeatherService: WeatherServiceProtocol {
         let response = try JSONDecoder().decode(OpenMeteoResponse.self, from: data)
         
         guard let currentObj = response.current else { throw URLError(.cannotParseResponse) }
-        let isDay = currentObj.is_day == 1
-        let currentDisplay = mapToDisplay(temp: currentObj.temperature_2m, code: currentObj.weather_code, isDay: isDay)
+        let currentDisplay = mapToDisplay(temp: currentObj.temperature_2m, code: currentObj.weather_code, isDay: currentObj.is_day == 1)
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
+        
+        // Parse Sunshine Times for accurate Day/Night calculation
+        var sunEvents: [(sunrise: Date, sunset: Date)] = []
+        if let daily = response.daily {
+            for i in 0..<min(daily.sunrise.count, daily.sunset.count) {
+                if let sunrise = dateFormatter.date(from: daily.sunrise[i]),
+                   let sunset = dateFormatter.date(from: daily.sunset[i]) {
+                    sunEvents.append((sunrise, sunset))
+                }
+            }
+        }
         
         // Parse full minutely_15 array
         var timeline: [WeatherTimePoint] = []
         if let minutely = response.minutely_15 {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm"
             
             for i in 0..<min(minutely.time.count, minutely.temperature_2m.count, minutely.weather_code.count) {
                 if let date = dateFormatter.date(from: minutely.time[i]) {
+                    // Determine isDay for specific time point
+                    var isPointDay = false
+                    if !sunEvents.isEmpty {
+                        // Find solar day for this date
+                        if let event = sunEvents.first(where: { Calendar.current.isDate($0.sunrise, inSameDayAs: date) }) {
+                            isPointDay = date >= event.sunrise && date < event.sunset
+                        } else {
+                            // Fallback: simple 6am-8pm if date match fails
+                            let hour = Calendar.current.component(.hour, from: date)
+                            isPointDay = hour >= 6 && hour < 20
+                        }
+                    } else {
+                        // Fallback if no daily data
+                        let hour = Calendar.current.component(.hour, from: date)
+                        isPointDay = hour >= 6 && hour < 20
+                    }
+                    
                     let temp = Int(round(minutely.temperature_2m[i]))
-                    let (icon, _, _) = wmoCodeToIcon(minutely.weather_code[i], isDay: isDay)
+                    let (icon, _, _) = wmoCodeToIcon(minutely.weather_code[i], isDay: isPointDay)
                     timeline.append(WeatherTimePoint(date: date, temp: temp, conditionIcon: icon))
                 }
             }
