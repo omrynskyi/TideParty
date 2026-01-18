@@ -226,22 +226,46 @@ struct DiscoveryResultView: View {
                         ProgressStreakCard()
                             .padding(.horizontal, 24)
                         
-                        // Learn Button (Toggles Card)
+                        // Learn Button with OttoBook
                         Button(action: {
                             withAnimation {
                                 showLearnMode.toggle()
                             }
                         }) {
-                            HStack {
-                                Image(systemName: showLearnMode ? "chevron.up" : "book.fill")
-                                Text(showLearnMode ? "Close Fact Sheet" : "Let's Learn!")
+                            HStack(spacing: 12) {
+                                Image("OttoBook")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 100, height: 100)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(showLearnMode ? "Close Fact Sheet" : "Let's Learn!")
+                                        .font(.system(size: 18, weight: .bold))
+                                    Text("Discover fun facts")
+                                        .font(.system(size: 12))
+                                        .opacity(0.8)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: showLearnMode ? "chevron.up" : "chevron.down")
+                                    .font(.system(size: 16, weight: .semibold))
                             }
-                            .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 18)
-                            .background(Color.cardPurple)
-                            .cornerRadius(28)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                            .background(
+                                LinearGradient(
+                                    colors: [Color("MainBlue"), Color("MainBlue").opacity(0.85)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(20)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
                         }
                         .padding(.horizontal, 24)
                         
@@ -379,40 +403,74 @@ struct DiscoveryResultView: View {
 }
 
 // MARK: - Progress Streak Card
-// MARK: - Progress Streak Card
 struct ProgressStreakCard: View {
     @ObservedObject var userStats = UserStatsService.shared
     
     var body: some View {
         let badge = userStats.nextBadge
         
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text(badge.title)
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.white)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 14) {
+                // Icon with gradient background
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color("MainBlue").opacity(0.3), Color.purple.opacity(0.2)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
+                    
+                    Image(systemName: badge.icon)
+                        .font(.system(size: 26))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color("MainBlue"), .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(badge.title)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.white)
+                    
+                    Text(badge.subtitle)
+                        .font(.system(size: 13))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                
                 Spacer()
-                // Icon placeholder
-                Circle()
-                    .fill(Color.blue.opacity(0.3))
-                    .frame(width: 60, height: 60)
-                    .overlay(
-                        Image(systemName: badge.icon)
-                            .font(.system(size: 30))
-                            .foregroundColor(.pink)
-                    )
             }
-            
-            Text(badge.subtitle)
-                .font(.system(size: 15))
-                .foregroundColor(.white.opacity(0.9))
             
             // Progress bar
             TremblingProgressBar(progress: badge.progress)
         }
-        .padding(20)
-        .background(Color.cardPurple)
+        .padding(18)
+        .background(
+            LinearGradient(
+                colors: [Color("MainBlue"), Color("MainBlue").opacity(0.9)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.3), Color.white.opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1
+                )
+        )
+        .shadow(color: Color("MainBlue").opacity(0.3), radius: 10, x: 0, y: 5)
     }
 }
 
@@ -553,10 +611,20 @@ struct QuizCard: View {
                     .foregroundColor(.red)
             }
         }
-        .padding(24)
-        .background(Color.cardPurple)
+        .padding(20)
+        .background(
+            LinearGradient(
+                colors: [Color("MainBlue"), Color("MainBlue").opacity(0.9)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .cornerRadius(20)
-        .animation(.spring(), value: isSubmitted)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+        )
+        .shadow(color: Color("MainBlue").opacity(0.2), radius: 8, x: 0, y: 4)
         .animation(.spring(), value: selectedAnswer)
         .onAppear {
             if viewModel.quizQuestion == nil {
@@ -596,9 +664,9 @@ struct QuizCard: View {
             if isSubmitted {
                 if isThisCorrect { return .green.opacity(0.8) }
                 if isSelected && !isCorrect { return .red.opacity(0.8) }
-                return .gray.opacity(0.3)
+                return Color.white.opacity(0.15)
             } else {
-                return isSelected ? Color.blue : Color.buttonPurple
+                return isSelected ? Color("MainBlue").opacity(0.8) : Color.white.opacity(0.2)
             }
         }
         
@@ -703,9 +771,20 @@ struct LearnCard: View {
                 Color.clear.frame(height: 1)
             }
         }
-        .padding(24)
-        .background(Color.cardPurple)
+        .padding(20)
+        .background(
+            LinearGradient(
+                colors: [Color("MainBlue"), Color("MainBlue").opacity(0.9)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
         .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+        )
+        .shadow(color: Color("MainBlue").opacity(0.2), radius: 8, x: 0, y: 4)
         .onAppear {
             if viewModel.factSheet == nil {
                 Task {
