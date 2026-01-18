@@ -17,6 +17,7 @@ struct ScannerView: View {
     @State private var showResult = false
     @State private var resultOffset: CGFloat = UIScreen.main.bounds.height
     @State private var capturedLabel: String = ""
+    @State private var catchCount: Int = 1
     
     var body: some View {
         ZStack {
@@ -96,6 +97,7 @@ struct ScannerView: View {
                 DiscoveryResultView(
                     image: image,
                     capturedLabel: capturedLabel,
+                    catchCount: catchCount,
                     onDismiss: {
                         withAnimation(.easeOut(duration: 0.3)) {
                             resultOffset = UIScreen.main.bounds.height
@@ -131,9 +133,12 @@ struct ScannerView: View {
         // Capture current frame
         viewModel.captureCurrentFrame()
         
-        // Track creature capture (only increments if unique)
+        // Track creature capture and get count
         Task {
-            try? await UserStatsService.shared.incrementCreature(name: capturedLabel)
+            let count = try? await UserStatsService.shared.captureCreature(name: capturedLabel)
+            await MainActor.run {
+                catchCount = count ?? 1
+            }
         }
         
         // Show result and animate slide up
