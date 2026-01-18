@@ -22,16 +22,32 @@ class LandingViewModel: ObservableObject {
     @AppStorage("lastInsightFetchTimestamp") private var lastInsightFetchTimestamp: Double = 0
     
     // Derived for UI Overlay
-    var selectedGraphData: (height: Double, weather: WeatherTimePoint?)? {
+    var selectedGraphData: (height: Double, isRising: Bool, weather: WeatherTimePoint?)? {
         guard let date = selectedGraphDate else { return nil }
-        // 1. Find nearest tide height
-        let nearest = tideCurve.min(by: { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) })
-        let height = nearest?.height ?? 0.0
         
-        // 2. Find nearest weather from 15-min timeline
+        // 1. Find nearest tide height index
+        // We use indices.min to get the index instead of element so we can peek neighbors for slope
+        guard let nearestIndex = tideCurve.indices.min(by: { 
+            abs(tideCurve[$0].date.timeIntervalSince(date)) < abs(tideCurve[$1].date.timeIntervalSince(date)) 
+        }) else { return nil }
+        
+        let nearest = tideCurve[nearestIndex]
+        let height = nearest.height
+        
+        // 2. Determine Trend (Is Rising?)
+        var isRising = false
+        if nearestIndex < tideCurve.count - 1 {
+            // Look ahead
+            isRising = tideCurve[nearestIndex + 1].height > height
+        } else if nearestIndex > 0 {
+            // Look behind (end of curve)
+            isRising = height > tideCurve[nearestIndex - 1].height
+        }
+        
+        // 3. Find nearest weather from 15-min timeline
         let nearestWeather = weatherTimeline.min(by: { abs($0.date.timeIntervalSince(date)) < abs($1.date.timeIntervalSince(date)) })
         
-        return (height, nearestWeather) 
+        return (height, isRising, nearestWeather) 
     }
     
     // Get weather for current display time (selected or now)
@@ -42,12 +58,12 @@ class LandingViewModel: ObservableObject {
     
     private let weatherService: WeatherService 
     private let tideService: TideService // Changed to concrete class to access specific method
-    private let genAIService: GenAIService
+    private let genAIService: AIServiceProtocol
     
     init(
         weatherService: WeatherService = WeatherService(),
         tideService: TideService = TideService(), // Default to Concrete
-        genAIService: GenAIService = GenAIService()
+        genAIService: AIServiceProtocol = CerebrasService()
     ) {
         self.weatherService = weatherService
         self.tideService = tideService
@@ -135,16 +151,12 @@ class LandingViewModel: ObservableObject {
         let cacheAge = currentTime - lastInsightFetchTimestamp
         let cacheExpirationTime: TimeInterval = 900 // 15 minutes in seconds
         
-        // DEVELOPMENT: Cache disabled for testing - always fetch fresh
-        // TODO: Re-enable cache for production
-        /*
         // Check if cache is valid (< 15 minutes old) and not empty
         if cacheAge < cacheExpirationTime && !cachedInsightText.isEmpty {
             print("📱 Using cached insight.")
             aiInsightText = cachedInsightText
             return
         }
-        */
         
         // Cache miss - fetch new insight
         isLoadingInsight = true

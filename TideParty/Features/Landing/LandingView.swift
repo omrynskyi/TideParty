@@ -104,17 +104,7 @@ struct LandingView: View {
                     }
                     .padding(.horizontal, 90)
                     
-                    // AI Insights Card
-                    AIInsightView(
-                        insightText: viewModel.aiInsightText,
-                        isLoading: viewModel.isLoadingInsight,
-                        onRefresh: {
-                            Task {
-                                await viewModel.fetchSmartInsight()
-                            }
-                        }
-                    )
-                    .padding(.horizontal)
+                    
                     
                     // Tide Graph Card (Interactive)
                     if !viewModel.tideCurve.isEmpty {
@@ -134,12 +124,16 @@ struct LandingView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(alignment: .center, spacing: 2) {
                                     let height = viewModel.selectedGraphData?.height ?? viewModel.tide?.height ?? 0
+                                    let isRising = viewModel.selectedGraphData?.isRising ?? (viewModel.tide?.trend == "Rising")
+                                    
                                     Text(String(format: "%.1f'", height))
                                         .font(.system(size: 28, weight: .medium))
                                         .foregroundColor(.black)
-                                    Image(systemName: "arrow.down")
-                                        .font(.system(size: 16, weight: .medium))
+                                    Image(systemName: "arrow.up")
+                                        .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.black)
+                                        .rotationEffect(Angle(degrees: isRising ? 0 : 180))
+                                        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: isRising)
                                 }
                                 
                                 HStack(spacing: 6) {
@@ -168,6 +162,12 @@ struct LandingView: View {
                         .frame(height: 180)
                         .padding(.horizontal)
                     }
+                    // AI Insights Card
+                    AIInsightView(
+                        insightText: viewModel.aiInsightText,
+                        isLoading: viewModel.isLoadingInsight
+                    )
+                    .padding(.horizontal)
                     
                     // Bottom padding to account for sticky wave section
                     Spacer().frame(height: 180)

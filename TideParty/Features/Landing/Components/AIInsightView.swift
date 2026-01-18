@@ -4,47 +4,40 @@ import SwiftUI
 struct AIInsightView: View {
     let insightText: String
     let isLoading: Bool
-    let onRefresh: () -> Void
-    
     var body: some View {
-        Button(action: {
-            onRefresh()
-        }) {
-            ZStack(alignment: .topLeading) {
-                RoundedRectangle(cornerRadius: 24)
-                    .fill(Color.blue.opacity(0.15))
+        ZStack(alignment: .topLeading) {
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color.blue.opacity(0.15))
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // Header
+                Text("AI Insights ✨")
+                    .font(.system(size: 16,weight: .bold))
+                    .fallbackFont(.system(size: 16, weight: .bold))
+                    .foregroundColor(.black)
                 
-                VStack(alignment: .leading, spacing: 12) {
-                    // Header
-                    Text("AI Insights ✨")
-                        .font(.system(size: 16,weight: .bold))
-                        .fallbackFont(.system(size: 16, weight: .bold))
-                        .foregroundColor(.black)
-                    
-                    // Content or Loading State
-                    if isLoading {
-                        HStack {
-                            Spacer()
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: Color.blue))
-                            Spacer()
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 20)
-                    } else {
-                        Text(insightText.isEmpty ? "Tap to refresh for a new insight!" : insightText)
-                            .font(.system(size: 24,weight: .medium))
-                            .fallbackFont(.system(size: 20))
-                            .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
+                // Content or Loading State
+                if isLoading {
+                    HStack {
+                        Spacer()
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: Color.blue))
+                        Spacer()
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    Text(insightText.isEmpty ? "Tap to refresh for a new insight!" : insightText)
+                        .font(.system(size: 24,weight: .medium))
+                        .fallbackFont(.system(size: 20))
+                        .foregroundColor(Color(red: 0.2, green: 0.2, blue: 0.2))
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .padding(20)
             }
-            .frame(minHeight: 160)
+            .padding(20)
         }
-        .buttonStyle(PlainButtonStyle())
+        .frame(minHeight: 160)
     }
 }
 
@@ -67,15 +60,13 @@ extension View {
     VStack(spacing: 20) {
         AIInsightView(
             insightText: "Look for purple sea urchins in the exposed tide pools at 1.8ft. Hermit crabs are scurrying between rocks in the warm 68°F sun!",
-            isLoading: false,
-            onRefresh: { print("Refresh tapped") }
+            isLoading: false
         )
         .padding()
         
         AIInsightView(
             insightText: "",
-            isLoading: true,
-            onRefresh: { print("Refresh tapped") }
+            isLoading: true
         )
         .padding()
     }

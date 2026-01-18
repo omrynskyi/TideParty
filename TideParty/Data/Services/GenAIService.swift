@@ -2,7 +2,7 @@ import Foundation
 import GoogleGenerativeAI
 
 /// Service for generating AI-powered tide pooling insights using Google's Gemini API
-class GenAIService {
+class GenAIService: AIServiceProtocol {
     private let model: GenerativeModel
     
     init() {
