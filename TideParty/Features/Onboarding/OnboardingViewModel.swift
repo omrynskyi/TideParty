@@ -13,7 +13,11 @@ class OnboardingViewModel: ObservableObject {
     // Step 0: Name, 1: Email, 2: Password, 3: Safety
     @Published var currentStep: Int = 0
     
-            // First, try to sign in
+    /// Smart auth: Try sign-in first, fallback to create if user doesn't exist
+    func authenticate() async throws {
+        errorMessage = nil
+        
+        do {
             let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
             let result = try await Auth.auth().signIn(withEmail: cleanEmail, password: password)
             
