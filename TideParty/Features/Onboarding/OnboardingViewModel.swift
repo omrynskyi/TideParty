@@ -31,7 +31,11 @@ class OnboardingViewModel: ObservableObject {
             
             // Save locally and fetch/create stats
             UserDefaults.standard.set(username.isEmpty ? result.user.displayName : username, forKey: "displayName")
-            try? await UserStatsService.shared.fetchStats()
+            let statsExist = try await UserStatsService.shared.fetchStats()
+            if !statsExist {
+                let nameToSave = username.isEmpty ? (result.user.displayName ?? "Explorer") : username
+                try await UserStatsService.shared.createUserStats(displayName: nameToSave)
+            }
             
         } catch let error as NSError {
             // Check if the error is "user not found"
@@ -105,7 +109,11 @@ class OnboardingViewModel: ObservableObject {
             // Save locally and fetch/create stats
             let name = username.isEmpty ? (authResult.user.displayName ?? "") : username
             UserDefaults.standard.set(name, forKey: "displayName")
-            try? await UserStatsService.shared.createUserStats(displayName: name)
+            
+            let statsExist = try await UserStatsService.shared.fetchStats()
+            if !statsExist {
+                try await UserStatsService.shared.createUserStats(displayName: name)
+            }
             
         } catch {
             print("Google sign-in failed: \(error.localizedDescription)")

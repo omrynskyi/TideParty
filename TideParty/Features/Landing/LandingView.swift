@@ -272,6 +272,7 @@ struct LandingView: View {
         }
         .task {
             await viewModel.refreshData()
+            try? await userStats.fetchStats()
         }
         .fullScreenCover(isPresented: $showAccountView) {
             AccountView()

@@ -61,12 +61,13 @@ class UserStatsService: ObservableObject {
     }
     
     // MARK: - Fetch User Stats
-    func fetchStats() async throws {
-        guard let userId = userId else { return }
+    @discardableResult
+    func fetchStats() async throws -> Bool {
+        guard let userId = userId else { return false }
         
         let doc = try await db.collection("users").document(userId).getDocument()
         
-        if let data = doc.data() {
+        if doc.exists, let data = doc.data() {
             self.displayName = data["displayName"] as? String ?? ""
             if let counts = data["creatureCounts"] as? [String: Int] {
                 self.creatureCounts = counts
@@ -79,7 +80,11 @@ class UserStatsService: ObservableObject {
             UserDefaults.standard.set(displayName, forKey: "displayName")
             UserDefaults.standard.set(creatureCounts, forKey: "creatureCounts")
             UserDefaults.standard.set(selectedBadgeId, forKey: "selectedBadgeId")
+            
+            return true
         }
+        
+        return false
     }
     
     // MARK: - Capture Creature
