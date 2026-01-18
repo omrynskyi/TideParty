@@ -229,8 +229,8 @@ struct OnboardingSafetyView: View {
             
             VStack(alignment: .leading, spacing: 20) {
                 TideRuleRow(emoji: "🤲", text: "Touch Gently")
-                TideRuleRow(emoji: "🏠", text: "In its Home")
-                TideRuleRow(emoji: "👣", text: "Don't Step")
+                TideRuleRow(emoji: "🏠", text: "In its Home, Don't Turn Rocks")
+                TideRuleRow(emoji: "👣", text: "Step Lightly and Carefully")
                 TideRuleRow(emoji: "👀", text: "Eyes on Ocean")
             }
             .padding(.horizontal, 40)

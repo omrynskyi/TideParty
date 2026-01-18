@@ -223,6 +223,9 @@ struct LandingView: View {
                     
                     // Tide Party Section
                     TidePartySection()
+                    
+                    // Donate Card
+                    DonateCard()
                         .padding(.horizontal)
                     
                     // Bottom padding to account for sticky wave section
