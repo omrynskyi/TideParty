@@ -19,59 +19,118 @@ struct TidePartySection: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            // Main buttons row
-            if !isExpanded && !showJoinInput {
-                HStack(spacing: 12) {
-                    // Start Party Button
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3)) {
-                            isExpanded = true
-                            showJoinInput = false
+            // Unified Persistent Header (Otto + Text + Close Button)
+            VStack(spacing: 16) {
+                HStack(alignment: .top, spacing: 16) {
+                    Image("OttoCheckeredFlag")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 100, height: 100)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        // Dynamic Title
+                        Group {
+                            if !isExpanded && !showJoinInput {
+                                Text("Ready, Set, Tide!")
+                            } else if showJoinInput {
+                                Text("Join a Party")
+                            } else {
+                                Text(selectedMode == .timeTrial ? "Tide Trails" : "XP Race")
+                            }
                         }
-                    }) {
-                        HStack {
-                            Image(systemName: "flag.fill")
-                                .font(.system(size: 16))
-                            Text("Start Party")
-                                .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 20, weight: .heavy))
+                        .foregroundColor(Color("MainBlue"))
+                        .transition(.opacity) // Smooth text fade
+                        
+                        // Dynamic Subtitle
+                        Group {
+                            if !isExpanded && !showJoinInput {
+                                Text("Race your friends! Create a party to tally scores & catches.")
+                            } else if showJoinInput {
+                                Text("Enter the 4-digit code to join your friends.")
+                            } else {
+                                Text(selectedMode == .timeTrial 
+                                     ? "Race against the clock! Catch as many as you can." 
+                                     : "First to reach the XP target wins!")
+                            }
                         }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(Color("MainBlue"))
-                        .cornerRadius(16)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .transition(.opacity)
                     }
                     
-                    // Join Party Button
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3)) {
-                            showJoinInput = true
-                            isExpanded = false
+                    Spacer()
+                    
+                    // Close Button (Only visible when expanded or joining)
+                    if isExpanded || showJoinInput {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3)) {
+                                isExpanded = false
+                                showJoinInput = false
+                            }
+                        }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.gray)
+                                .frame(width: 28, height: 28)
+                                .background(Color.gray.opacity(0.1))
+                                .clipShape(Circle())
                         }
-                    }) {
-                        HStack {
-                            Image(systemName: "person.badge.plus")
-                                .font(.system(size: 16))
-                            Text("Join")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        .foregroundColor(Color("MainBlue"))
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 20)
-                        .background(Color("MainBlue").opacity(0.1))
-                        .cornerRadius(16)
+                        .transition(.scale.combined(with: .opacity))
                     }
                 }
-            }
-            
-            // Expanded: Create Party Options
-            if isExpanded {
-                createPartyOptions
-            }
-            
-            // Join Party Input
-            if showJoinInput {
-                joinPartyInput
+                .padding(.top, 4)
+                
+                // Content Body (Buttons or Forms)
+                if !isExpanded && !showJoinInput {
+                    // Action Buttons
+                    HStack(spacing: 12) {
+                        // Start Party Button
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3)) {
+                                isExpanded = true
+                                showJoinInput = false
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "flag.fill")
+                                    .font(.system(size: 16))
+                                Text("Start Party")
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(Color("MainBlue"))
+                            .cornerRadius(16)
+                        }
+                        
+                        // Join Party Button
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3)) {
+                                showJoinInput = true
+                                isExpanded = false
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "person.badge.plus")
+                                    .font(.system(size: 16))
+                                Text("Join")
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .foregroundColor(Color("MainBlue"))
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 20)
+                            .background(Color("MainBlue").opacity(0.1))
+                            .cornerRadius(16)
+                        }
+                    }
+                } else if isExpanded {
+                    createPartyOptions
+                } else if showJoinInput {
+                    joinPartyInput
+                }
             }
         }
         .padding(16)
@@ -99,27 +158,6 @@ struct TidePartySection: View {
     
     private var createPartyOptions: some View {
         VStack(spacing: 16) {
-            // Header with close button
-            HStack {
-                Text("Start a Party")
-                    .font(.system(size: 18, weight: .bold))
-                
-                Spacer()
-                
-                Button(action: {
-                    withAnimation(.spring(response: 0.3)) {
-                        isExpanded = false
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.gray)
-                        .frame(width: 28, height: 28)
-                        .background(Color.gray.opacity(0.1))
-                        .clipShape(Circle())
-                }
-            }
-            
             // Mode Picker
             VStack(alignment: .leading, spacing: 8) {
                 Text("Game Mode")
@@ -127,8 +165,8 @@ struct TidePartySection: View {
                     .foregroundColor(.secondary)
                 
                 HStack(spacing: 8) {
-                    modeButton(mode: .timeTrial, icon: "timer", label: "Time Trial")
-                    modeButton(mode: .scoreRace, icon: "star.fill", label: "Score Race")
+                    modeButton(mode: .timeTrial, icon: "timer", label: "Tide Trails")
+                    modeButton(mode: .scoreRace, icon: "star.fill", label: "XP Race")
                 }
             }
             
@@ -179,31 +217,11 @@ struct TidePartySection: View {
             .disabled(partyVM.isLoading)
         }
     }
-    
+
     // MARK: - Join Party Input
     
     private var joinPartyInput: some View {
         VStack(spacing: 16) {
-            // Header with close button
-            HStack {
-                Text("Join a Party")
-                    .font(.system(size: 18, weight: .bold))
-                
-                Spacer()
-                
-                Button(action: {
-                    withAnimation(.spring(response: 0.3)) {
-                        showJoinInput = false
-                    }
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.gray)
-                        .frame(width: 28, height: 28)
-                        .background(Color.gray.opacity(0.1))
-                        .clipShape(Circle())
-                }
-            }
             
             // Code Input
             ZStack {

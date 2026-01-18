@@ -205,6 +205,23 @@ struct DiscoveryResultView: View {
                             .multilineTextAlignment(.center)
                             .padding(.top, 20)
                         
+                        // XP Badge for party mode
+                        if isInParty && xpGained > 0 {
+                            HStack(spacing: 6) {
+                                Image(systemName: "star.fill")
+                                    .foregroundColor(.yellow)
+                                Text("+\(xpGained) XP")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(Color.green.opacity(0.8))
+                            )
+                        }
+                        
                         // Progress Card
                         ProgressStreakCard()
                             .padding(.horizontal, 24)
