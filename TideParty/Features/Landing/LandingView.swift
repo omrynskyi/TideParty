@@ -211,6 +211,10 @@ struct LandingView: View {
                     )
                     .padding(.horizontal)
                     
+                    // Tide Party Section
+                    TidePartySection()
+                        .padding(.horizontal)
+                    
                     // Bottom padding to account for sticky wave section
                     Spacer().frame(height: 180)
                 }
@@ -269,3 +273,6 @@ struct LandingView: View {
 
 
 
+#Preview{
+    LandingView()
+}

@@ -133,8 +133,11 @@ struct DiscoveryResultView: View {
     let image: UIImage
     let capturedLabel: String // Label captured at button press time
     let catchCount: Int // How many times this creature has been caught
+    let initialXpGained: Int // XP gained from this catch (party mode)
+    var isInParty: Bool = false // Whether user is in a party
     var onDismiss: () -> Void = {}
     
+    @State private var xpGained: Int = 0 // Mutable for quiz bonus
     @State private var waveOffset: Double = 0
     @State private var dragOffset: CGFloat = 0
     @State private var scrollOffset: CGFloat = 0 // Track scroll position
@@ -142,6 +145,16 @@ struct DiscoveryResultView: View {
     @State private var showLearnMode = false // Toggle for Learn feature
     
     @StateObject private var viewModel = DiscoveryViewModel()
+    
+    init(image: UIImage, capturedLabel: String, catchCount: Int, xpGained: Int = 0, isInParty: Bool = false, onDismiss: @escaping () -> Void = {}) {
+        self.image = image
+        self.capturedLabel = capturedLabel
+        self.catchCount = catchCount
+        self.initialXpGained = xpGained
+        self.isInParty = isInParty
+        self.onDismiss = onDismiss
+        self._xpGained = State(initialValue: xpGained)
+    }
     
     var body: some View {
         GeometryReader { geometry in
@@ -209,12 +222,31 @@ struct DiscoveryResultView: View {
                                 .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 8)
                                 .padding(.top, imageTop - 30) // Offset relative to waveTop
                             
-                            // Title
-                            Text(catchCount == 1 ? "You Found a \(capturedLabel)!" : "Cool Catch! This is your \(ordinal(catchCount)) \(capturedLabel).")
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.center)
-                                .padding(.top, 20)
+                            // Title with XP badge when in party
+                            VStack(spacing: 8) {
+                                Text(catchCount == 1 ? "You Found a \(capturedLabel)!" : "Cool Catch! This is your \(ordinal(catchCount)) \(capturedLabel).")
+                                    .font(.system(size: 28, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .multilineTextAlignment(.center)
+                                
+                                // XP Badge for party mode
+                                if isInParty && xpGained > 0 {
+                                    HStack(spacing: 6) {
+                                        Image(systemName: "star.fill")
+                                            .foregroundColor(.yellow)
+                                        Text("+\(xpGained) XP")
+                                            .font(.system(size: 18, weight: .bold))
+                                            .foregroundColor(.white)
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(
+                                        Capsule()
+                                            .fill(Color.green.opacity(0.8))
+                                    )
+                                }
+                            }
+                            .padding(.top, 20)
                             
                             // Progress Card
                             ProgressStreakCard()
@@ -247,7 +279,7 @@ struct DiscoveryResultView: View {
                             }
                             
                             // Quiz Card
-                            QuizCard(creatureName: capturedLabel, viewModel: viewModel)
+                            QuizCard(creatureName: capturedLabel, viewModel: viewModel, xpGained: $xpGained, isInParty: isInParty)
                                 .padding(.horizontal, 24)
                             
                             Spacer(minLength: 120)
@@ -455,6 +487,8 @@ class DiscoveryViewModel: ObservableObject {
 struct QuizCard: View {
     let creatureName: String
     @ObservedObject var viewModel: DiscoveryViewModel
+    @Binding var xpGained: Int
+    var isInParty: Bool = false
     
     @State private var selectedAnswer: Int? // 1-based index
     @State private var isSubmitted = false
@@ -488,7 +522,7 @@ struct QuizCard: View {
                     VStack(spacing: 8) {
                         HStack {
                             Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            Text(isCorrect ? "Correct! +1 Quiz Score" : "Incorrect.")
+                            Text(isCorrect ? "Correct! +20 XP" : "Incorrect.")
                         }
                         .font(.headline)
                         .foregroundColor(isCorrect ? .green : .red)
@@ -545,6 +579,15 @@ struct QuizCard: View {
         if selected == correctIndex {
             isCorrect = true
             UserStatsService.shared.incrementQuizCorrect()
+            
+            // Add +20 XP for correct answer in party mode
+            if isInParty {
+                xpGained += 20
+                // Update score in Firestore
+                Task {
+                    try? await PartyService.shared.addQuizBonus(xp: 20)
+                }
+            }
         } else {
             isCorrect = false
         }

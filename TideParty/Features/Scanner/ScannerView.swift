@@ -18,6 +18,7 @@ struct ScannerView: View {
     @State private var resultOffset: CGFloat = UIScreen.main.bounds.height
     @State private var capturedLabel: String = ""
     @State private var catchCount: Int = 1
+    @State private var xpGained: Int = 0
     
     var body: some View {
         ZStack {
@@ -98,6 +99,8 @@ struct ScannerView: View {
                     image: image,
                     capturedLabel: capturedLabel,
                     catchCount: catchCount,
+                    xpGained: xpGained,
+                    isInParty: PartyViewModel.shared.isInParty,
                     onDismiss: {
                         withAnimation(.easeOut(duration: 0.3)) {
                             resultOffset = UIScreen.main.bounds.height
@@ -135,9 +138,28 @@ struct ScannerView: View {
         
         // Track creature capture and get count
         Task {
-            let count = try? await UserStatsService.shared.captureCreature(name: capturedLabel)
-            await MainActor.run {
-                catchCount = count ?? 1
+            // If in an active party, use party catch count
+            if PartyViewModel.shared.isInParty {
+                // Calculate XP before the catch (100 for first, 20 for repeat)
+                let currentCatches = PartyViewModel.shared.currentParty?.players
+                    .first(where: { $0.id == PartyViewModel.shared.currentUserId })?
+                    .catches[capturedLabel] ?? 0
+                let xp = currentCatches == 0 ? 100 : 20
+                
+                await PartyViewModel.shared.recordCatch(creatureId: capturedLabel)
+                
+                // Update UI with XP and party count
+                await MainActor.run {
+                    xpGained = xp
+                    catchCount = currentCatches + 1
+                }
+            } else {
+                // Normal mode - use profile count
+                let count = try? await UserStatsService.shared.captureCreature(name: capturedLabel)
+                await MainActor.run {
+                    catchCount = count ?? 1
+                    xpGained = 0
+                }
             }
         }
         
