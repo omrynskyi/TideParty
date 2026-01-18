@@ -96,11 +96,18 @@ class LandingViewModel: ObservableObject {
             // Find next low tide
             let nextLow = curve.first(where: { $0.type == "L" && $0.date > Date() }) ?? curve.first!
             // Interpolate current height
-            let currentHeight = curve.min(by: { abs($0.date.timeIntervalSince(Date())) < abs($1.date.timeIntervalSince(Date())) })?.height ?? 0.0
+            let currentIndex = curve.indices.min(by: { abs(curve[$0].date.timeIntervalSince(Date())) < abs(curve[$1].date.timeIntervalSince(Date())) }) ?? 0
+            let currentHeight = curve[currentIndex].height
+            
+            // Calculate trend by comparing to next point
+            var trend = "Falling"
+            if currentIndex < curve.count - 1 {
+                trend = curve[currentIndex + 1].height > currentHeight ? "Rising" : "Falling"
+            }
             
             let t = TideData(
                 height: currentHeight,
-                trend: "Falling", // TODO: Real logic
+                trend: trend,
                 nextLowTide: nextLow.date
             )
             
@@ -157,13 +164,13 @@ class LandingViewModel: ObservableObject {
     // MARK: - AI Insight with Smart Caching
     
     /// Fetches AI insight with 15-minute caching to avoid rate limits
-    func fetchSmartInsight() async {
+    func fetchSmartInsight(forceRefresh: Bool = false) async {
         let currentTime = Date().timeIntervalSince1970
         let cacheAge = currentTime - lastInsightFetchTimestamp
         let cacheExpirationTime: TimeInterval = 900 // 15 minutes in seconds
         
         // Check if cache is valid (< 15 minutes old) and not empty
-        if cacheAge < cacheExpirationTime && !cachedInsightText.isEmpty {
+        if !forceRefresh && cacheAge < cacheExpirationTime && !cachedInsightText.isEmpty {
             print("📱 Using cached insight.")
             aiInsightText = cachedInsightText
             return

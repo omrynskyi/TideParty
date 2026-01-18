@@ -33,11 +33,11 @@ enum PartyStatus: String, Codable {
 struct PartyPlayer: Codable, Identifiable, Equatable {
     let id: String
     let name: String
-    let avatar: String // Placeholder for now (e.g., "🦦")
+    let avatar: Int // Badge ID (0-14) for avatar display
     var xp: Int
     var catches: [String: Int] // creatureId -> count
     
-    init(id: String, name: String, avatar: String = "🦦", xp: Int = 0, catches: [String: Int] = [:]) {
+    init(id: String, name: String, avatar: Int = 0, xp: Int = 0, catches: [String: Int] = [:]) {
         self.id = id
         self.name = name
         self.avatar = avatar

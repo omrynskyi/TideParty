@@ -23,6 +23,10 @@ class PartyViewModel: ObservableObject {
     @Published var showSuccessMessage: Bool = false
     @Published var lastXPGain: Int = 0
     
+    // Win screen state
+    @Published var showWinScreen: Bool = false
+    @Published var raceResults: [PartyPlayer] = [] // Top 3 players sorted by XP
+    
     // MARK: - Private Properties
     
     private let partyService = PartyService.shared
@@ -186,11 +190,25 @@ class PartyViewModel: ObservableObject {
         }
     }
     
-    /// Finishes the party
+    /// Finishes the party and shows win screen
     private func finishParty() async {
-        // Party completion is detected via real-time listener
-        // Status will be updated to .finished by the service
-        print("🏁 Party completed!")
+        guard let party = currentParty else { return }
+        
+        // Get top 3 players sorted by XP (descending)
+        let sortedPlayers = party.sortedPlayers
+        raceResults = Array(sortedPlayers.prefix(3))
+        
+        // Show win screen
+        showWinScreen = true
+        
+        print("🏁 Party completed! Winner: \(raceResults.first?.name ?? "Unknown")")
+    }
+    
+    /// Dismisses win screen and leaves party
+    func dismissWinScreen() async {
+        showWinScreen = false
+        raceResults = []
+        await leaveParty()
     }
     
     /// Leaves the current party

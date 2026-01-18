@@ -70,13 +70,13 @@ struct PlayerProgressBar: View {
 #Preview {
     VStack(spacing: 20) {
         PlayerProgressBar(
-            player: PartyPlayer(id: "1", name: "You", avatar: "🦦", xp: 36, catches: [:]),
+            player: PartyPlayer(id: "1", name: "You", avatar: 1, xp: 36, catches: [:]),
             progress: 0.45,
             isCurrentUser: true
         )
         
         PlayerProgressBar(
-            player: PartyPlayer(id: "2", name: "Anthony", avatar: "🦦", xp: 43, catches: [:]),
+            player: PartyPlayer(id: "2", name: "Anthony", avatar: 2, xp: 43, catches: [:]),
             progress: 0.55,
             isCurrentUser: false
         )

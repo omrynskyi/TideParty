@@ -57,6 +57,14 @@ struct PartyRaceView: View {
         .fullScreenCover(isPresented: $showCamera) {
             ScannerView()
         }
+        .fullScreenCover(isPresented: $viewModel.showWinScreen) {
+            RaceWinView(results: viewModel.raceResults) {
+                Task {
+                    await viewModel.dismissWinScreen()
+                    dismiss()
+                }
+            }
+        }
         .onAppear {
             withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
                 waveOffset = 1.0
@@ -314,8 +322,8 @@ struct PartyRaceView: View {
         gameMode: .timeTrial,
         targetValue: 600,
         players: [
-            PartyPlayer(id: "user1", name: "Anthony", avatar: "🦦", xp: 450, catches: ["crab": 3]),
-            PartyPlayer(id: "user2", name: "You", avatar: "🐙", xp: 420, catches: ["starfish": 2])
+            PartyPlayer(id: "user1", name: "Anthony", avatar: 3, xp: 450, catches: ["crab": 3]),
+            PartyPlayer(id: "user2", name: "You", avatar: 1, xp: 420, catches: ["starfish": 2])
         ]
     )
     

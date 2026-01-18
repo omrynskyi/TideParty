@@ -124,6 +124,13 @@ struct ScannerView: View {
                 viewModel.stopSession()
             }
         }
+        .onChange(of: PartyViewModel.shared.showWinScreen) { showWin in
+            // Auto-dismiss camera when race completes
+            if showWin {
+                viewModel.stopSession()
+                dismiss()
+            }
+        }
         .statusBarHidden(true)
     }
     
@@ -138,7 +145,7 @@ struct ScannerView: View {
         
         // Track creature capture and get count
         Task {
-            // If in an active party, use party catch count
+            // If in an active party, use party catch count AND update profile stats
             if PartyViewModel.shared.isInParty {
                 // Calculate XP before the catch (100 for first, 20 for repeat)
                 let currentCatches = PartyViewModel.shared.currentParty?.players
@@ -146,7 +153,11 @@ struct ScannerView: View {
                     .catches[capturedLabel] ?? 0
                 let xp = currentCatches == 0 ? 100 : 20
                 
+                // Update party score
                 await PartyViewModel.shared.recordCatch(creatureId: capturedLabel)
+                
+                // Also update user's profile stats (badges, creature count)
+                _ = try? await UserStatsService.shared.captureCreature(name: capturedLabel)
                 
                 // Update UI with XP and party count
                 await MainActor.run {
@@ -161,14 +172,16 @@ struct ScannerView: View {
                     xpGained = 0
                 }
             }
-        }
-        
-        // Show result and animate slide up
-        showResult = true
-        resultOffset = UIScreen.main.bounds.height
-        
-        withAnimation(.easeOut(duration: 0.5)) {
-            resultOffset = 0
+            
+            // Show result AFTER XP is calculated (fixes race condition)
+            await MainActor.run {
+                showResult = true
+                resultOffset = UIScreen.main.bounds.height
+                
+                withAnimation(.easeOut(duration: 0.5)) {
+                    resultOffset = 0
+                }
+            }
         }
     }
 }

@@ -344,12 +344,12 @@ class PartyService {
         let stats = UserStatsService.shared
         let userId = Auth.auth().currentUser?.uid ?? "unknown"
         let name = stats.displayName.isEmpty ? "Player" : stats.displayName
-        let avatar = String(name.prefix(1)) + "🦦" // Simple avatar: first letter + otter emoji
+        let badgeId = stats.selectedBadgeId
         
         return PartyPlayer(
             id: userId,
             name: name,
-            avatar: avatar,
+            avatar: badgeId,
             xp: 0,
             catches: [:]
         )
@@ -360,12 +360,12 @@ class PartyService {
         let stats = UserStatsService.shared
         let userId = Auth.auth().currentUser?.uid ?? "unknown"
         let name = stats.displayName.isEmpty ? "Player" : stats.displayName
-        let avatar = String(name.prefix(1)) + "🦦"
+        let badgeId = stats.selectedBadgeId
         
         return PartyPlayer(
             id: userId,
             name: name,
-            avatar: avatar,
+            avatar: badgeId,
             xp: 0,
             catches: [:]
         )

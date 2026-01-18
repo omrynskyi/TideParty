@@ -30,15 +30,21 @@ class CerebrasService: AIServiceProtocol {
         
         // Construct the prompt
         let prompt = """
-        You are an enthusiastic local marine biologist showing a friend around the tide pools in \(location), California! 🌊
+        You are a friendly and knowledgeable marine biologist guide for \(location), California.
         
         Current Conditions:
         - Tide: \(String(format: "%.1f", tideHeight))ft (\(tideDirection.lowercased()))
         - Weather: \(weatherCondition), \(temperature)°F
         
-        Give me a fun, specific tip about what to look for right now. Mention a specific creature that would be active or visible in these conditions and where it likes to hide. Make it sound exciting and welcoming!
+        Task:
+        Write a 2-3 sentence insight card for a visitor.
+        1. Give a practical tip based on the weather/tide (e.g., "wear layers," "rocks are slippery," "perfect visibility").
+        2. Suggest one specific creature to find right now and where it hides.
         
-        Keep it to 2-3 short sentences. No emojis in the output (I'll add my own).
+        Tone:
+        - Welcoming and helpful, but not overly dramatic.
+        - Use clear, simple language.
+        - No emojis.
         """
         
         // Prepare Request Body
