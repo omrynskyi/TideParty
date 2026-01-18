@@ -195,78 +195,75 @@ struct DiscoveryResultView: View {
                         }
                         
                         // Content Layer
-                        VStack(spacing: 0) {
-                            // Transparent tracker at top of content
-                            GeometryReader { proxy in
-                                Color.clear.preference(
-                                    key: ScrollOffsetPreferenceKey.self,
-                                    value: proxy.frame(in: .named("scroll")).minY
-                                )
-                            }
-                            .frame(height: 0)
+                        VStack(spacing: 24) {
+                            // Captured Image
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: imageSize, height: imageSize)
+                                .clipShape(RoundedRectangle(cornerRadius: 24))
+                                .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 8)
+                                .padding(.top, imageTop - 30) // Offset relative to waveTop
                             
-                            VStack(spacing: 24) {
-                                // Captured Image
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width: imageSize, height: imageSize)
-                                    .clipShape(RoundedRectangle(cornerRadius: 24))
-                                    .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 8)
-                                    .padding(.top, imageTop - 30) // Offset relative to waveTop
-                                
-                                // Title
-                                Text(catchCount == 1 ? "You Found a \(capturedLabel)!" : "Cool Catch! This is your \(ordinal(catchCount)) \(capturedLabel).")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .multilineTextAlignment(.center)
-                                    .padding(.top, 20)
-                                
-                                // Progress Card
-                                ProgressStreakCard()
-                                    .padding(.horizontal, 24)
-                                
-                                // Learn Button
-                                Button(action: {}) {
-                                    Text("Lets learn!")
-                                        .font(.system(size: 24, weight: .bold))
-                                        .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 24)
-                                        .background(Color.cardPurple)
-                                        .cornerRadius(28)
-                                }
+                            // Title
+                            Text(catchCount == 1 ? "You Found a \(capturedLabel)!" : "Cool Catch! This is your \(ordinal(catchCount)) \(capturedLabel).")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundColor(.white)
+                                .multilineTextAlignment(.center)
+                                .padding(.top, 20)
+                            
+                            // Progress Card
+                            ProgressStreakCard()
                                 .padding(.horizontal, 24)
-                                
-                                // Quiz Card
-                                QuizCard(creatureName: capturedLabel)
-                                    .padding(.horizontal, 24)
-                                
-                                Spacer(minLength: 120)
+                            
+                            // Learn Button
+                            Button(action: {}) {
+                                Text("Lets learn!")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 24)
+                                    .background(Color.cardPurple)
+                                    .cornerRadius(28)
                             }
+                            .padding(.horizontal, 24)
+                            
+                            // Quiz Card
+                            QuizCard(creatureName: capturedLabel)
+                                .padding(.horizontal, 24)
+                            
+                            Spacer(minLength: 120)
                         }
                     }
                 }
-                .coordinateSpace(name: "scroll")
-                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-                    scrollOffset = value
+                .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    geometry.contentOffset.y
+                } action: { oldValue, newValue in
+                    scrollOffset = newValue
+                    print("🔍 scrollOffset updated: \(newValue)")
                 }
                 // Smart Gesture for Content
                 .simultaneousGesture(
                     DragGesture(minimumDistance: 40)
                         .onChanged { value in
-                            let isAtTop = scrollOffset >= -30
+                            // Debug: Print scroll offset to understand the values
+                            print("🔍 scrollOffset: \(scrollOffset), translation: \(value.translation.height)")
+                            
+                            // contentOffset.y is 0 at top, positive when scrolled down
+                            let isAtTop = scrollOffset <= 30
                             
                             // If we are getting dragged down...
                             if value.translation.height > 0 {
                                 if !isAtTop {
                                     // Not at top yet: Clear pivot
+                                    print("❌ Not at top - blocking dismiss")
                                     initialDragPivot = nil
                                     dragOffset = 0
                                 } else {
                                     // At top: Capture pivot if needed
                                     if initialDragPivot == nil {
                                         initialDragPivot = value.translation.height
+                                        print("📍 At top - setting pivot: \(initialDragPivot!)")
                                     }
                                     
                                     // Calculate effective drag (delta from when we hit top)
@@ -275,6 +272,7 @@ struct DiscoveryResultView: View {
                                     
                                     if effectiveDrag > 0 {
                                         dragOffset = effectiveDrag
+                                        print("✅ Allowing dismiss - dragOffset: \(dragOffset)")
                                     } else {
                                         dragOffset = 0
                                     }
@@ -286,6 +284,8 @@ struct DiscoveryResultView: View {
                             }
                         }
                         .onEnded { value in
+                            print("🏁 Gesture ended - translation: \(value.translation.height), pivot: \(initialDragPivot ?? 0)")
+                            
                             // Calculate effective endpoint based on pivot
                             let pivot = initialDragPivot ?? 0
                             let effectiveTranslation = value.translation.height - pivot
