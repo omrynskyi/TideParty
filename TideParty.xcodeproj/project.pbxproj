@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4292E2C32F1CB994003B033E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 4292E2C22F1CB994003B033E /* GoogleService-Info.plist */; };
 		7C3C23602F1B38AC0074F0BF /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C235F2F1B38AC0074F0BF /* FirebaseAuth */; };
 		7C3C23622F1B38AC0074F0BF /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C23612F1B38AC0074F0BF /* FirebaseFirestore */; };
 		7C3C23642F1B38AC0074F0BF /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 7C3C23632F1B38AC0074F0BF /* FirebaseStorage */; };
@@ -16,6 +17,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4292E2C22F1CB994003B033E /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		7C3C234E2F1B36C70074F0BF /* TideParty.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TideParty.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -62,6 +64,7 @@
 			children = (
 				7C3C23502F1B36C70074F0BF /* TideParty */,
 				7C3C234F2F1B36C70074F0BF /* Products */,
+				4292E2C22F1CB994003B033E /* GoogleService-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -148,6 +151,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4292E2C32F1CB994003B033E /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

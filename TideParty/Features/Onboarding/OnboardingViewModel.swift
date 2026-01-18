@@ -13,11 +13,6 @@ class OnboardingViewModel: ObservableObject {
     // Step 0: Name, 1: Email, 2: Password, 3: Safety
     @Published var currentStep: Int = 0
     
-    /// Smart auth: Try sign-in first, fallback to create if user doesn't exist
-    func authenticate() async throws {
-        errorMessage = nil
-        
-        do {
             // First, try to sign in
             let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
             let result = try await Auth.auth().signIn(withEmail: cleanEmail, password: password)
@@ -39,29 +34,43 @@ class OnboardingViewModel: ObservableObject {
             }
             
         } catch let error as NSError {
-            // Check if the error is "user not found"
-            if error.code == AuthErrorCode.userNotFound.rawValue {
-                // User doesn't exist, so create a new account
-                do {
-                    let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let result = try await Auth.auth().createUser(withEmail: cleanEmail, password: password)
-                    let changeRequest = result.user.createProfileChangeRequest()
-                    changeRequest.displayName = username
-                    try await changeRequest.commitChanges()
-                    print("User created: \(result.user.uid)")
-                    
-                    // Create new user stats document
-                    try await UserStatsService.shared.createUserStats(displayName: username)
-                } catch {
-                    print("Create failed: \(error.localizedDescription)")
-                    errorMessage = error.localizedDescription
-                    throw error
+            // Check specific "Stop" errors where we shouldn't attempt creation
+            if error.code == AuthErrorCode.wrongPassword.rawValue {
+                errorMessage = "Incorrect password."
+                return
+            }
+            
+            if error.code == AuthErrorCode.userDisabled.rawValue {
+                errorMessage = "This account has been disabled."
+                return
+            }
+            
+            if error.code == AuthErrorCode.invalidEmail.rawValue {
+                errorMessage = "Invalid email format."
+                return
+            }
+
+            // For UserNotFound, InvalidCredential, or other generic failures, try creating the account
+            print("Sign in failed (\(error.code)), attempting creation...")
+            
+            do {
+                let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+                let result = try await Auth.auth().createUser(withEmail: cleanEmail, password: password)
+                let changeRequest = result.user.createProfileChangeRequest()
+                changeRequest.displayName = username
+                try await changeRequest.commitChanges()
+                print("User created: \(result.user.uid)")
+                
+                // Create new user stats document
+                try await UserStatsService.shared.createUserStats(displayName: username)
+            } catch let createError as NSError {
+                // If creation fails because it exists, then it really was a login issue (like a weird credential bug)
+                if createError.code == AuthErrorCode.emailAlreadyInUse.rawValue {
+                    errorMessage = "Account already exists. Please check your password."
+                } else {
+                    print("Create failed: \(createError.localizedDescription)")
+                    errorMessage = createError.localizedDescription
                 }
-            } else {
-                // Other errors (wrong password, etc.)
-                print("Sign in failed: \(error.localizedDescription)")
-                errorMessage = error.localizedDescription
-                throw error
             }
         }
     }
