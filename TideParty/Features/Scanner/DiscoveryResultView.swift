@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // Color constants extracted from mockup
 extension Color {
@@ -138,6 +139,9 @@ struct DiscoveryResultView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var scrollOffset: CGFloat = 0 // Track scroll position
     @State private var initialDragPivot: CGFloat? = nil // Tracks drag start point for smart dismissal
+    @State private var showLearnMode = false // Toggle for Learn feature
+    
+    @StateObject private var viewModel = DiscoveryViewModel()
     
     var body: some View {
         GeometryReader { geometry in
@@ -216,20 +220,34 @@ struct DiscoveryResultView: View {
                             ProgressStreakCard()
                                 .padding(.horizontal, 24)
                             
-                            // Learn Button
-                            Button(action: {}) {
-                                Text("Lets learn!")
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 24)
-                                    .background(Color.cardPurple)
-                                    .cornerRadius(28)
+                            // Learn Button (Toggles Card)
+                            Button(action: {
+                                withAnimation {
+                                    showLearnMode.toggle()
+                                }
+                            }) {
+                                HStack {
+                                    Image(systemName: showLearnMode ? "chevron.up" : "book.fill")
+                                    Text(showLearnMode ? "Close Fact Sheet" : "Let's Learn!")
+                                }
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 18)
+                                .background(Color.cardPurple)
+                                .cornerRadius(28)
                             }
                             .padding(.horizontal, 24)
                             
+                            // Learn Card (Collapsible)
+                            if showLearnMode {
+                                LearnCard(creatureName: capturedLabel, viewModel: viewModel)
+                                    .padding(.horizontal, 24)
+                                    .transition(.scale.combined(with: .opacity).animation(.spring()))
+                            }
+                            
                             // Quiz Card
-                            QuizCard(creatureName: capturedLabel)
+                            QuizCard(creatureName: capturedLabel, viewModel: viewModel)
                                 .padding(.horizontal, 24)
                             
                             Spacer(minLength: 120)
@@ -372,67 +390,138 @@ struct ProgressStreakCard: View {
 }
 
 // MARK: - Quiz Card
-struct QuizCard: View {
-    let creatureName: String
-    @State private var selectedAnswer: String?
-    @State private var isSubmitted = false
-    @State private var isCorrect = false
+// MARK: - Discovery ViewModel
+@MainActor
+class DiscoveryViewModel: ObservableObject {
+    @Published var quizQuestion: QuizQuestion?
+    @Published var factSheet: CreatureFactSheet?
     
-    // Simple correct answer mapping (Demo logic)
-    // In real app, this would come from a data model or CMS
-    private var correctAnswer: String {
-        switch creatureName.lowercased() {
-        case "starfish", "sea star": return "Global Warming"
-        case "crab": return "Loss of Shells"
-        default: return "Global Warming" // Default answer for now
+    @Published var isQuizLoading = false
+    @Published var isLearnLoading = false
+    
+    @Published var quizError: String?
+    @Published var learnError: String?
+    
+    // Default to Cerebras for reliability
+    private let aiService: AIServiceProtocol = CerebrasService()
+    
+    func loadQuiz(for creature: String) async {
+        isQuizLoading = true
+        quizError = nil
+        do {
+            let fetchedQuestion = try await aiService.generateQuizQuestion(creature: creature)
+            self.quizQuestion = fetchedQuestion
+            isQuizLoading = false
+        } catch {
+            print("Failed to fetch quiz: \(error)")
+            // Fallback: Try to load a random question from local JSON
+            if let url = Bundle.main.url(forResource: "question_ex", withExtension: "json"),
+               let data = try? Data(contentsOf: url),
+               let allQuestions = try? JSONDecoder().decode([QuizQuestion].self, from: data),
+               let randomQuestion = allQuestions.randomElement() {
+                self.quizQuestion = randomQuestion
+            } else {
+                // Ultimate fallback
+                self.quizQuestion = QuizQuestion(
+                    question: "What is the number one cause of habitat loss for \(creature.lowercased())?",
+                    answer1: "Pollution",
+                    answer2: "Global Warming",
+                    answer3: "Overfishing",
+                    answer4: "Tourism",
+                    correctAnswer: 2,
+                    reason: "Climate change and habitat destruction are major threats to marine life."
+                )
+            }
+            isQuizLoading = false
         }
     }
     
-    let answers = ["Pollution", "Global Warming", "Overfishing", "Tourism"]
+    func loadFactSheet(for creature: String) async {
+        isLearnLoading = true
+        learnError = nil
+        do {
+            let sheet = try await aiService.generateFactSheet(creature: creature)
+            self.factSheet = sheet
+            isLearnLoading = false
+        } catch {
+            print("Failed to fetch fact sheet: \(error)")
+            self.learnError = "Could not load educational content. Please try again later."
+            isLearnLoading = false
+        }
+    }
+}
+
+// MARK: - Quiz Card
+struct QuizCard: View {
+    let creatureName: String
+    @ObservedObject var viewModel: DiscoveryViewModel
+    
+    @State private var selectedAnswer: Int? // 1-based index
+    @State private var isSubmitted = false
+    @State private var isCorrect = false
     
     var body: some View {
         VStack(spacing: 20) {
-            Text("Question: What is the number one cause of habitat loss for \(creatureName.lowercased())?")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-            
-            // Answer grid - 2x2
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    ForEach(answers.prefix(2), id: \.self) { answer in
-                        answerButton(answer)
-                    }
+            if viewModel.isQuizLoading {
+                ProgressView("Asking the Marine Biologist...")
+                    .tint(.white)
+                    .foregroundColor(.white)
+                    .padding()
+            } else if let question = viewModel.quizQuestion {
+                Text(question.question)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                
+                // Answer grid
+                VStack(spacing: 12) {
+                    answerButton(text: question.answer1, index: 1)
+                    answerButton(text: question.answer2, index: 2)
+                    answerButton(text: question.answer3, index: 3)
+                    answerButton(text: question.answer4, index: 4)
                 }
-                HStack(spacing: 12) {
-                    ForEach(answers.suffix(2), id: \.self) { answer in
-                        answerButton(answer)
-                    }
-                }
-            }
-            .disabled(isSubmitted) // Disable interaction after submit
-            
-            // Submit Button or Result Message
-            if isSubmitted {
-                HStack {
-                    Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                    Text(isCorrect ? "Correct! +1 Quiz Score" : "Incorrect. Try again next time!")
-                }
-                .font(.headline)
-                .foregroundColor(isCorrect ? .green : .red)
-                .padding(.top, 8)
-                .transition(.scale.combined(with: .opacity))
-            } else if selectedAnswer != nil {
-                Button(action: submitQuiz) {
-                    Text("Submit Answer")
+                .disabled(isSubmitted)
+                
+                // Submit / Result
+                if isSubmitted {
+                    VStack(spacing: 8) {
+                        HStack {
+                            Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                            Text(isCorrect ? "Correct! +1 Quiz Score" : "Incorrect.")
+                        }
                         .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
-                        .cornerRadius(16)
+                        .foregroundColor(isCorrect ? .green : .red)
+                        
+                        if !isCorrect {
+                            Text("The Check: Answer \(ordinal(question.correctAnswer))")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        
+                        Text(question.reason)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.9))
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 4)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .transition(.scale.combined(with: .opacity))
+                } else if selectedAnswer != nil {
+                    Button(action: { submitQuiz(correctIndex: question.correctAnswer) }) {
+                        Text("Submit Answer")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.blue)
+                            .cornerRadius(16)
+                    }
+                    .transition(.scale.combined(with: .opacity))
                 }
-                .transition(.scale.combined(with: .opacity))
+            } else {
+                Text("Could not load quiz.")
+                    .foregroundColor(.red)
             }
         }
         .padding(24)
@@ -440,30 +529,34 @@ struct QuizCard: View {
         .cornerRadius(20)
         .animation(.spring(), value: isSubmitted)
         .animation(.spring(), value: selectedAnswer)
+        .onAppear {
+            if viewModel.quizQuestion == nil {
+                Task {
+                    await viewModel.loadQuiz(for: creatureName)
+                }
+            }
+        }
     }
     
-    private func submitQuiz() {
+    private func submitQuiz(correctIndex: Int) {
         guard let selected = selectedAnswer else { return }
         
         isSubmitted = true
-        if selected == correctAnswer {
+        if selected == correctIndex {
             isCorrect = true
-            // Increment stats
             UserStatsService.shared.incrementQuizCorrect()
         } else {
             isCorrect = false
         }
     }
     
-    private func answerButton(_ answer: String) -> some View {
-        let isSelected = selectedAnswer == answer
+    private func answerButton(text: String, index: Int) -> some View {
+        let isSelected = selectedAnswer == index
+        let isThisCorrect = viewModel.quizQuestion?.correctAnswer == index
         
-        // Color logic:
-        // If submitted: Green if correct answer, Red if selected & wrong, gray otherwise
-        // If not submitted: Blue if selected, Purple default
         var bgColor: Color {
             if isSubmitted {
-                if answer == correctAnswer { return .green.opacity(0.8) }
+                if isThisCorrect { return .green.opacity(0.8) }
                 if isSelected && !isCorrect { return .red.opacity(0.8) }
                 return .gray.opacity(0.3)
             } else {
@@ -471,16 +564,116 @@ struct QuizCard: View {
             }
         }
         
-        return Button(action: { selectedAnswer = answer }) {
-            Text(answer)
+        return Button(action: { selectedAnswer = index }) {
+            Text(text)
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
+                .padding(.horizontal, 12)
                 .background(bgColor)
                 .cornerRadius(24)
-                .scaleEffect(isSelected ? 1.05 : 1.0)
+                .scaleEffect(isSelected ? 1.02 : 1.0)
                 .animation(.spring(), value: isSelected)
+        }
+    }
+    
+    private func ordinal(_ n: Int) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .ordinal
+        return formatter.string(from: NSNumber(value: n)) ?? "\(n)"
+    }
+}
+
+// MARK: - Learn Fact Sheet Card
+struct LearnCard: View {
+    let creatureName: String
+    @ObservedObject var viewModel: DiscoveryViewModel
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header
+            HStack {
+                Text("About \(creatureName)")
+                    .font(.title2.bold())
+                    .foregroundColor(.white)
+                Spacer()
+                Image(systemName: "book.fill")
+                    .foregroundColor(.cyan)
+                    .font(.title2)
+            }
+            
+            if viewModel.isLearnLoading {
+                HStack {
+                    Spacer()
+                    ProgressView("Consulting the library...")
+                        .tint(.white)
+                        .foregroundColor(.white)
+                    Spacer()
+                }
+                .padding()
+            } else if let factSheet = viewModel.factSheet {
+                // Content
+                VStack(alignment: .leading, spacing: 12) {
+                    // Scientific Name
+                    Text(factSheet.scientificName)
+                        .font(.headline.italic())
+                        .foregroundColor(.white.opacity(0.7))
+                    
+                    Divider().overlay(Color.white.opacity(0.2))
+                    
+                    // About
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label("Description", systemImage: "eye.fill")
+                            .font(.caption.bold())
+                            .foregroundColor(.cyan)
+                        Text(factSheet.about)
+                            .font(.body)
+                            .foregroundColor(.white)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    
+                    // Ecosystem Role
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label("Ecosystem Role", systemImage: "leaf.fill")
+                            .font(.caption.bold())
+                            .foregroundColor(.green)
+                        Text(factSheet.ecosystemRole)
+                            .font(.body)
+                            .foregroundColor(.white)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    
+                    // Fun Fact
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label("Fun Fact", systemImage: "sparkles")
+                            .font(.caption.bold())
+                            .foregroundColor(.yellow)
+                        Text(factSheet.funFact)
+                            .font(.body)
+                            .foregroundColor(.white)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .transition(.opacity)
+            } else if let error = viewModel.learnError {
+                Text(error)
+                    .foregroundColor(.red)
+                    .font(.caption)
+            } else {
+                // Initial state before load (shouldn't really happen if triggered on appear)
+                Color.clear.frame(height: 1)
+            }
+        }
+        .padding(24)
+        .background(Color.cardPurple)
+        .cornerRadius(20)
+        .onAppear {
+            if viewModel.factSheet == nil {
+                Task {
+                    await viewModel.loadFactSheet(for: creatureName)
+                }
+            }
         }
     }
 }

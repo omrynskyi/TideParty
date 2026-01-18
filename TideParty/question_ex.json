@@ -1,0 +1,47 @@
+[
+    {
+        "question": "Which of these is NOT a type of crab typically found in tide pools?",
+        "answer1": "Hermit Crab",
+        "answer2": "Shore Crab",
+        "answer3": "King Crab",
+        "answer4": "Decorator Crab",
+        "correct_answer": 3,
+        "reason": "King crabs are typically found in deep, cold waters, not in the shallow intertidal zones of tide pools."
+    },
+    {
+        "question": "What should you do if you find a starfish in a tide pool?",
+        "answer1": "Pick it up and take it home",
+        "answer2": "Leave it alone and observe from a distance",
+        "answer3": "Move it to a better spot",
+        "answer4": "Feed it some bread",
+        "correct_answer": 2,
+        "reason": "Tide pool creatures are sensitive. Touching or moving them can cause stress or injury. 'Look but don't touch' is the best policy."
+    },
+    {
+        "question": "Why do anemones close up when the tide goes out?",
+        "answer1": "To sleep",
+        "answer2": "To retain moisture and protect from drying out",
+        "answer3": "To hide from predators",
+        "answer4": "Because they are shy",
+        "correct_answer": 2,
+        "reason": "Anemones are soft-bodied animals that can dry out quickly in the sun and wind. Closing up traps water inside to keep them moist until the tide returns."
+    },
+    {
+        "question": "What is the primary food source for many sea urchins in tide pools?",
+        "answer1": "Small fish",
+        "answer2": "Algae and kelp",
+        "answer3": "Sand",
+        "answer4": "Plastic waste",
+        "correct_answer": 2,
+        "reason": "Sea urchins are grazers that use their specialized mouthparts (Aristotle's lantern) to scrape algae and kelp off rocks."
+    },
+    {
+        "question": "How do limpets survive strong waves?",
+        "answer1": "They swim away",
+        "answer2": "They bury themselves in sand",
+        "answer3": "They clamp down tightly onto rocks using their muscular foot",
+        "answer4": "They float on the surface",
+        "correct_answer": 3,
+        "reason": "Limpets have a strong muscular foot that allows them to create a powerful suction cup seal against the rock, preventing them from being washed away."
+    }
+]
