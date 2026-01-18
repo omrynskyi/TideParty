@@ -3,9 +3,17 @@ import SwiftUI
 import Combine
 
 
+enum OttoMascot {
+    case puffer   // For chilly weather (cold)
+    case chill    // For cloudy weather (sweater)
+    case floatie  // For great sunny days
+    case none
+}
+
 @MainActor
 class LandingViewModel: ObservableObject {
     @Published var heroMessage: String = "Loading..."
+    @Published var ottoMascot: OttoMascot = .none
     @Published var isLoading: Bool = true
     @Published var weather: WeatherData?
     @Published var tide: TideData?
@@ -130,15 +138,18 @@ class LandingViewModel: ObservableObject {
         let isWarm = weather.temp > 65
         let isSunny = weather.isSunny
         
-        // Base logic for text
+        // Base logic for text and Otto mascot
         if isWarm && isSunny {
-             heroMessage = "It's a great day to\ngo tide-pooling!"
+             heroMessage = "It's a great day to go tide-pooling!"
+             ottoMascot = .floatie
         } else {
              // Fallback
              if !isSunny {
-                 heroMessage = "It's a bit cloudy.\nBring a sweater!"
+                 heroMessage = "It's a bit cloudy. Bring a sweater!"
+                 ottoMascot = .chill
              } else {
-                 heroMessage = "Pack a jacket,\nit's chilly!"
+                 heroMessage = "Pack a jacket, it's chilly!"
+                 ottoMascot = .puffer
              }
          }
     }

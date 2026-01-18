@@ -75,29 +75,6 @@ struct AIInsightView: View {
             // Expandable content
             if isExpanded {
                 VStack(alignment: .leading, spacing: 0) {
-                    // Glowing gradient divider
-                    ZStack {
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.purple.opacity(0.4), Color("MainBlue").opacity(0.5), Color.purple.opacity(0.3)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(height: 2)
-                            .blur(radius: 2)
-                        
-                        Rectangle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.purple.opacity(0.6), Color("MainBlue").opacity(0.7), Color.purple.opacity(0.4)],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                            .frame(height: 1)
-                    }
                     
                     if isLoading {
                         // Loading state
@@ -122,46 +99,28 @@ struct AIInsightView: View {
                             .padding(.vertical, 18)
                     }
                 }
-                .background(
-                    ZStack {
-                        Color(.systemBackground)
-                        
-                        // Subtle inner glow at top
-                        VStack {
-                            LinearGradient(
-                                colors: [Color.purple.opacity(0.05), Color.clear],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                            .frame(height: 30)
-                            Spacer()
-                        }
-                    }
-                )
+                .background(Color(.systemBackground))
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .background(
-            ZStack {
-                // Base background
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color(.systemBackground))
-                
-                // Gradient border glow
-                RoundedRectangle(cornerRadius: 20)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.purple.opacity(0.4),
-                                Color("MainBlue").opacity(0.4),
-                                Color.purple.opacity(0.2)
-                            ],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1.5
-                    )
-            }
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.systemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.purple.opacity(0.4),
+                            Color("MainBlue").opacity(0.4),
+                            Color.purple.opacity(0.2)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
         )
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: Color.purple.opacity(0.1), radius: 10, x: 0, y: 4)

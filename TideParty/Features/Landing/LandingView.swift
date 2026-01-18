@@ -58,54 +58,65 @@ struct LandingView: View {
                     .padding(.horizontal, 16)
                     .padding(.top, 50) // small top padding for breathing room
                     
-                    // Hero Message & Weather
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(alignment: .top) {
-                            Text(viewModel.heroMessage)
-                                .font(.system(size: 30, weight: .bold))
-                                .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true)
-                            
-                            Spacer()
-                            
-                            if let weather = viewModel.weather {
-                                VStack {
-                                    // Choose correct palette colors for the SF Symbol
-                                    let name = weather.condition
-                                    let lower = name.lowercased()
-                                    let isSun = lower.contains("sun")
-                                    let isMoon = lower.contains("moon")
+                    // Hero: Otto + Message + Weather (inline)
+                    HStack(alignment: .center, spacing: 12) {
+                        // Otto Mascot
+                        if viewModel.ottoMascot != .none {
+                            let ottoImage: String = switch viewModel.ottoMascot {
+                                case .floatie: "OttoFloatie"
+                                case .chill: "OttoChill"
+                                case .puffer: "OttoPuffer"
+                                case .none: "OttoChill"
+                            }
+                            Image(ottoImage)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                        
+                        // Hero message
+                        Text(viewModel.heroMessage)
+                            .font(.system(size: 24, weight: .bold))
+                            .kerning(-0.5)
+                        
+                        Spacer()
+                        
+                        if let weather = viewModel.weather {
+                            VStack {
+                                let name = weather.condition
+                                let palette = getPalette(for: name)
+                                Image(systemName: name)
+                                    .resizable()
+                                    .symbolRenderingMode(.palette)
+                                    .foregroundStyle(palette.0, palette.1)
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 32, height: 32)
+                                
+                                HStack(spacing: 2) {
+                                    Text("\(weather.temp)°")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .kerning(-1.0)
                                     
-                                    let palette = getPalette(for: name)
-                                    Image(systemName: name)
-                                        .resizable()
-                                        .symbolRenderingMode(.palette)
-                                        .foregroundStyle(palette.0, palette.1)
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 40, height: 40)
-                                    
-                                    HStack{
-                                        Text("\(weather.temp)°")
-                                            .font(.system(size: 18, weight: .bold))
-                                            .kerning(-1.0)
-                                        
-                                        Text("\(weather.forecastTemp ?? 0)° in 2h")
-                                            .font(.caption)
-                                            .foregroundColor(.gray)
-                                            .kerning(-0.5)
-                                    }
+                                    Text("\(weather.forecastTemp ?? 0)° in 2h")
+                                        .font(.caption2)
+                                        .foregroundColor(.gray)
+                                        .kerning(-0.5)
                                 }
-                                .padding(8)
-                                .background(isWeatherExpanded ? Color.gray.opacity(0.1) : Color.clear)
-                                .cornerRadius(12)
-                                .onTapGesture {
-                                    withAnimation(.spring()) {
-                                        isWeatherExpanded.toggle()
-                                    }
+                            }
+                            .padding(6)
+                            .background(isWeatherExpanded ? Color.gray.opacity(0.1) : Color.clear)
+                            .cornerRadius(12)
+                            .onTapGesture {
+                                withAnimation(.spring()) {
+                                    isWeatherExpanded.toggle()
                                 }
                             }
                         }
-                        .padding(.horizontal)
+                    }
+                    .padding(.horizontal)
+                    
+                    VStack(alignment: .leading, spacing: 12) {
                         
                         if isWeatherExpanded {
                             ScrollView(.horizontal, showsIndicators: false) {
@@ -219,7 +230,8 @@ struct LandingView: View {
                         insightText: viewModel.aiInsightText,
                         isLoading: viewModel.isLoadingInsight
                     )
-                    .padding(.horizontal)
+                    .padding()
+                    
                     
                     // Tide Party Section
                     TidePartySection()
@@ -280,6 +292,18 @@ struct LandingView: View {
         if lower.contains("sun") { return (.yellow, .orange) }
         if lower.contains("moon") { return (Color("MainBlue"), .yellow) }
         return (.gray, .gray)
+    }
+}
+
+// Triangle shape for speech bubble pointer
+struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        path.closeSubpath()
+        return path
     }
 }
 
