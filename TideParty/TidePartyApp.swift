@@ -18,6 +18,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 struct TidePartyApp: App {
     @StateObject private var authManager = AuthManager.shared
     @State private var navigationPath = NavigationPath()
+    @State private var hasPledgedSafety = false
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     
     var body: some Scene {
@@ -32,24 +33,33 @@ struct TidePartyApp: App {
                             .scaleEffect(1.5)
                     }
                 } else if authManager.currentUser != nil {
-                    NavigationStack(path: $navigationPath) {
-                        LandingView(
-                            onFindSpots: {
-                                navigationPath.append(Route.spots)
-                            },
-                            onOpenCamera: {
-                                navigationPath.append(Route.scanner)
+                    // Logged in - show safety pledge first, then main content
+                    if !hasPledgedSafety {
+                        SafetyPledgeView(onConfirm: {
+                            withAnimation {
+                                hasPledgedSafety = true
                             }
-                        )
-                        .navigationDestination(for: Route.self) { route in
-                            switch route {
-                            case .spots:
-                                SpotsContainerView(onOpenCamera: {
+                        })
+                    } else {
+                        NavigationStack(path: $navigationPath) {
+                            LandingView(
+                                onFindSpots: {
+                                    navigationPath.append(Route.spots)
+                                },
+                                onOpenCamera: {
                                     navigationPath.append(Route.scanner)
-                                })
-                            case .scanner:
-                                ScannerView()
-                                    .navigationBarBackButtonHidden(true)
+                                }
+                            )
+                            .navigationDestination(for: Route.self) { route in
+                                switch route {
+                                case .spots:
+                                    SpotsContainerView(onOpenCamera: {
+                                        navigationPath.append(Route.scanner)
+                                    })
+                                case .scanner:
+                                    ScannerView()
+                                        .navigationBarBackButtonHidden(true)
+                                }
                             }
                         }
                     }
