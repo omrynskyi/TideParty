@@ -42,7 +42,7 @@ TideParty is an iOS application designed to enhance the tide pooling experience 
 
 The project is organized into the following main directories:
 
-### `Features/`
+### `TideParty/Features/`
 
 Contains the UI and specific logic for each feature area:
 
@@ -54,7 +54,7 @@ Contains the UI and specific logic for each feature area:
 - **Party/**: Group session logic and views.
 - **Spots/**: Map and location-based features (`SpotsListView.swift`, `SpotsMapView.swift`).
 
-### `Services/`
+### `TideParty/Services/`
 
 Core application services managed as singletons:
 
@@ -64,7 +64,7 @@ Core application services managed as singletons:
 - `LocationManager.swift`: CoreLocation wrapper.
 - `CameraManager.swift`: AVFoundation setup.
 
-### `Data/`
+### `TideParty/Data/`
 
 Data models and external data services:
 
@@ -74,13 +74,13 @@ Data models and external data services:
   - `WeatherService.swift`: Fetches weather data.
   - `TideService.swift`: Fetches tide data.
 
-### `Components/`
+### `TideParty/Components/`
 
 Reusable UI components used across multiple features.
 
 - `DonateCard.swift`: Conservation donation promotion card.
 
-### `Assets.xcassets/`
+### `TideParty/Assets.xcassets/`
 
 Contains all images, icons, and color sets (e.g., `MainBlue`, `OttoBook`, `OttoMonacle`, Badge icons).
 
