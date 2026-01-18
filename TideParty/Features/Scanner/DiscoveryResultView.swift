@@ -236,7 +236,7 @@ struct DiscoveryResultView: View {
                         }
                         
                         // Quiz Card
-                        QuizCard(creatureName: capturedLabel, viewModel: viewModel)
+                        QuizCard(creatureName: capturedLabel, viewModel: viewModel, xpGained: $xpGained, isInParty: isInParty)
                             .padding(.horizontal, 24)
                         
                         Spacer(minLength: 120)
@@ -262,80 +262,7 @@ struct DiscoveryResultView: View {
                             // Solid blue fill - extends down
                             Color.discoveryBlue
                         }
-                        // Content Layer
-                        VStack(spacing: 24) {
-                            // Captured Image
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: imageSize, height: imageSize)
-                                .clipShape(RoundedRectangle(cornerRadius: 24))
-                                .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 8)
-                                .padding(.top, imageTop - 30) // Offset relative to waveTop
-                            
-                            // Title with XP badge when in party
-                            VStack(spacing: 8) {
-                                Text(catchCount == 1 ? "You Found a \(capturedLabel)!" : "Cool Catch! This is your \(ordinal(catchCount)) \(capturedLabel).")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .multilineTextAlignment(.center)
-                                
-                                // XP Badge for party mode
-                                if isInParty && xpGained > 0 {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "star.fill")
-                                            .foregroundColor(.yellow)
-                                        Text("+\(xpGained) XP")
-                                            .font(.system(size: 18, weight: .bold))
-                                            .foregroundColor(.white)
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(
-                                        Capsule()
-                                            .fill(Color.green.opacity(0.8))
-                                    )
-                                }
-                            }
-                            .padding(.top, 20)
-                            
-                            // Progress Card
-                            ProgressStreakCard()
-                                .padding(.horizontal, 24)
-                            
-                            // Learn Button (Toggles Card)
-                            Button(action: {
-                                withAnimation {
-                                    showLearnMode.toggle()
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: showLearnMode ? "chevron.up" : "book.fill")
-                                    Text(showLearnMode ? "Close Fact Sheet" : "Let's Learn!")
-                                }
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 18)
-                                .background(Color.cardPurple)
-                                .cornerRadius(28)
-                            }
-                            .padding(.horizontal, 24)
-                            
-                            // Learn Card (Collapsible)
-                            if showLearnMode {
-                                LearnCard(creatureName: capturedLabel, viewModel: viewModel)
-                                    .padding(.horizontal, 24)
-                                    .transition(.scale.combined(with: .opacity).animation(.spring()))
-                            }
-                            
-                            // Quiz Card
-                            QuizCard(creatureName: capturedLabel, viewModel: viewModel, xpGained: $xpGained, isInParty: isInParty)
-                                .padding(.horizontal, 24)
-                            
-                            Spacer(minLength: 120)
-                        }
-                    }
+                    )
                 }
                 .onScrollGeometryChange(for: CGFloat.self) { geometry in
                     geometry.contentOffset.y
