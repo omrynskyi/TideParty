@@ -3,7 +3,9 @@ import Combine
 
 struct LandingView: View {
     @StateObject private var viewModel = LandingViewModel()
+    @ObservedObject var userStats = UserStatsService.shared
     @State private var isWeatherExpanded = false
+    @State private var showAccountView = false
     
     var onFindSpots: () -> Void = {}
     var onOpenCamera: () -> Void = {}
@@ -36,13 +38,21 @@ struct LandingView: View {
                         Spacer()
                         
                         Button(action: {
-                            // Debug: Sign Out (AuthManager will update state)
-                            try? AuthManager.shared.signOut()
+                            showAccountView = true
                         }) {
-                            Circle()
-                                .fill(Color("MainBlue").opacity(0.2))
-                                .frame(width: 36, height: 36)
-                                .overlay(Text("🦦").font(.system(size: 20)))
+                            if let badge = Badge.badge(for: userStats.selectedBadgeId) {
+                                Image(badge.imageName)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 36, height: 36)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color("MainBlue").opacity(0.3), lineWidth: 2))
+                            } else {
+                                Circle()
+                                    .fill(Color("MainBlue").opacity(0.2))
+                                    .frame(width: 36, height: 36)
+                                    .overlay(Text("🦦").font(.system(size: 20)))
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
@@ -247,6 +257,9 @@ struct LandingView: View {
         }
         .task {
             await viewModel.refreshData()
+        }
+        .fullScreenCover(isPresented: $showAccountView) {
+            AccountView()
         }
 
     }

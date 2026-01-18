@@ -20,6 +20,7 @@ class UserStatsService: ObservableObject {
     @Published var creatureCounts: [String: Int] = [:]  // creature name -> catch count
     @Published var locationsVisited: Int = 0
     @Published var quizCorrect: Int = 0
+    @Published var selectedBadgeId: Int = 0  // ID of the badge the user selected as profile icon
     
     private init() {
         // Load from UserDefaults on init
@@ -27,6 +28,7 @@ class UserStatsService: ObservableObject {
         if let counts = UserDefaults.standard.dictionary(forKey: "creatureCounts") as? [String: Int] {
             creatureCounts = counts
         }
+        selectedBadgeId = UserDefaults.standard.integer(forKey: "selectedBadgeId")
     }
     
     // MARK: - User ID Helper
@@ -50,6 +52,7 @@ class UserStatsService: ObservableObject {
             "creatureCounts": [:],
             "locationsVisited": 0,
             "quizCorrect": 0,
+            "selectedBadgeId": 0,
             "createdAt": FieldValue.serverTimestamp()
         ]
         
@@ -70,10 +73,12 @@ class UserStatsService: ObservableObject {
             }
             self.locationsVisited = data["locationsVisited"] as? Int ?? 0
             self.quizCorrect = data["quizCorrect"] as? Int ?? 0
+            self.selectedBadgeId = data["selectedBadgeId"] as? Int ?? 0
             
             // Cache locally
             UserDefaults.standard.set(displayName, forKey: "displayName")
             UserDefaults.standard.set(creatureCounts, forKey: "creatureCounts")
+            UserDefaults.standard.set(selectedBadgeId, forKey: "selectedBadgeId")
         }
     }
     
@@ -117,6 +122,25 @@ class UserStatsService: ObservableObject {
                 print("Error updating quiz score: \(error)")
             } else {
                 print("✅ Quiz score incremented!")
+            }
+        }
+    }
+    
+    // MARK: - Set Selected Badge
+    func setSelectedBadge(_ badgeId: Int) {
+        guard let userId = userId else { return }
+        
+        selectedBadgeId = badgeId
+        UserDefaults.standard.set(badgeId, forKey: "selectedBadgeId")
+        
+        // Update Firestore
+        db.collection("users").document(userId).updateData([
+            "selectedBadgeId": badgeId
+        ]) { error in
+            if let error = error {
+                print("Error updating selected badge: \(error)")
+            } else {
+                print("✅ Selected badge updated to \(badgeId)!")
             }
         }
     }
@@ -219,11 +243,9 @@ class UserStatsService: ObservableObject {
             return (max, 0, 1.0)
         }
         
-        let previous = milestones.last(where: { $0 <= current }) ?? 0
-        let totalSpan = Double(next - previous)
-        let currentProgress = Double(current - previous)
-        
-        let fraction = totalSpan > 0 ? (currentProgress / totalSpan) : 0.0
+        // Absolute progress: current / next threshold
+        // e.g., if next is 10 and you have 5, progress is 50%
+        let fraction = next > 0 ? Double(current) / Double(next) : 0.0
         let distance = next - current
         
         return (next, distance, fraction)

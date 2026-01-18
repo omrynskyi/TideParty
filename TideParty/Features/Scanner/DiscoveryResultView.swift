@@ -187,8 +187,61 @@ struct DiscoveryResultView: View {
                 .zIndex(10) // Always on top
                 
                 ScrollView(showsIndicators: false) {
-                    ZStack(alignment: .top) {
-                        // Background Layer (Moves with scroll)
+                    // Content Layer
+                    VStack(spacing: 24) {
+                        // Captured Image
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: imageSize, height: imageSize)
+                            .clipShape(RoundedRectangle(cornerRadius: 24))
+                            .shadow(color: .black.opacity(0.3), radius: 15, x: 0, y: 8)
+                            .padding(.top, imageTop - 30) // Offset relative to waveTop
+                        
+                        // Title
+                        Text(catchCount == 1 ? "You Found a \(capturedLabel)!" : "Cool Catch! This is your \(ordinal(catchCount)) \(capturedLabel).")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                            .padding(.top, 20)
+                        
+                        // Progress Card
+                        ProgressStreakCard()
+                            .padding(.horizontal, 24)
+                        
+                        // Learn Button (Toggles Card)
+                        Button(action: {
+                            withAnimation {
+                                showLearnMode.toggle()
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: showLearnMode ? "chevron.up" : "book.fill")
+                                Text(showLearnMode ? "Close Fact Sheet" : "Let's Learn!")
+                            }
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 18)
+                            .background(Color.cardPurple)
+                            .cornerRadius(28)
+                        }
+                        .padding(.horizontal, 24)
+                        
+                        // Learn Card (Collapsible)
+                        if showLearnMode {
+                            LearnCard(creatureName: capturedLabel, viewModel: viewModel)
+                                .padding(.horizontal, 24)
+                                .transition(.scale.combined(with: .opacity).animation(.spring()))
+                        }
+                        
+                        // Quiz Card
+                        QuizCard(creatureName: capturedLabel, viewModel: viewModel)
+                            .padding(.horizontal, 24)
+                        
+                        Spacer(minLength: 120)
+                    }
+                    .background(
                         VStack(spacing: 0) {
                             Color.clear.frame(height: waveTop) // Transparent top
                             
@@ -208,9 +261,7 @@ struct DiscoveryResultView: View {
                             
                             // Solid blue fill - extends down
                             Color.discoveryBlue
-                                .frame(height: 1000) // Arbitrary large height to cover scroll
                         }
-                        
                         // Content Layer
                         VStack(spacing: 24) {
                             // Captured Image
