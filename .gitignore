@@ -7,6 +7,8 @@ TideParty.xcodeproj/project.pbxproj
 *firebase-adminsdk*.json
 serviceAccountKey.json
 
+# Firebase config files
+GoogleService-Info.plist
 GenerativeAI-Info.plist
 
 GoogleService-Info.plist

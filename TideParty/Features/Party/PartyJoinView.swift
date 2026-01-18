@@ -174,7 +174,7 @@ struct CreatePartySheet: View {
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedMode: GameMode = .timeTrial
-    @State private var targetValue: Int = 600 // Default: 10 minutes
+    @State private var targetValue: Int = 500 // Default: 500 XP
     
     var body: some View {
         NavigationView {
@@ -198,10 +198,9 @@ struct CreatePartySheet: View {
                         .pickerStyle(.wheel)
                     } else {
                         Picker("XP", selection: $targetValue) {
-                            Text("300 XP").tag(300)
                             Text("500 XP").tag(500)
-                            Text("750 XP").tag(750)
                             Text("1000 XP").tag(1000)
+                            Text("2000 XP").tag(2000)
                         }
                         .pickerStyle(.wheel)
                     }
