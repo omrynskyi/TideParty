@@ -19,7 +19,8 @@ class OnboardingViewModel: ObservableObject {
         
         do {
             // First, try to sign in
-            let result = try await Auth.auth().signIn(withEmail: email, password: password)
+            let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+            let result = try await Auth.auth().signIn(withEmail: cleanEmail, password: password)
             
             // Update display name if provided
             if !username.isEmpty {
@@ -42,7 +43,8 @@ class OnboardingViewModel: ObservableObject {
             if error.code == AuthErrorCode.userNotFound.rawValue {
                 // User doesn't exist, so create a new account
                 do {
-                    let result = try await Auth.auth().createUser(withEmail: email, password: password)
+                    let cleanEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let result = try await Auth.auth().createUser(withEmail: cleanEmail, password: password)
                     let changeRequest = result.user.createProfileChangeRequest()
                     changeRequest.displayName = username
                     try await changeRequest.commitChanges()
