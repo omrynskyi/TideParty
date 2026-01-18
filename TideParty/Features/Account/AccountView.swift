@@ -300,15 +300,11 @@ struct AccountView: View {
                                 .stroke(isSelected ? Color("MainBlue") : Color.clear, lineWidth: 3)
                         )
                     
-                    // Anchor overlay for locked badges
+                    // Locked overlay
                     if !isUnlocked {
                         Circle()
                             .fill(Color.black.opacity(0.3))
                             .frame(width: 70, height: 70)
-                        
-                        Image(systemName: "anchor.circle.fill")
-                            .font(.system(size: 36))
-                            .foregroundColor(.white.opacity(0.9))
                     }
                 }
                 
